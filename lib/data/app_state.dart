@@ -242,6 +242,9 @@ class AppState extends ChangeNotifier {
       type = DayType.future;
     } else if (!workday) {
       type = TrHolidays.isHoliday(date) ? DayType.holiday : DayType.notWorkday;
+    } else if (date.isBefore(WorkdayCalculator.dateOnly(i.startDate)) || date.isAfter(endDate)) {
+      // Outside the internship window: an ordinary workday, never "missing".
+      type = DayType.notWorkday;
     } else if (entry?.copiedToPaper == true) {
       type = DayType.writtenToPaper;
     } else if (entry?.hasOfficialContent == true) {

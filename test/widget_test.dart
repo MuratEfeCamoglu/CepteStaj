@@ -6,9 +6,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:cepte_staj/data/app_state.dart';
 import 'package:cepte_staj/main.dart';
+import 'package:cepte_staj/models/models.dart';
 
 Future<void> _pumpAndSettleBoot(WidgetTester tester) async {
   await tester.pumpWidget(const CepteStajApp());
@@ -254,5 +257,16 @@ void main() {
     await tester.tap(find.text('Geri'));
     await tester.pumpAndSettle();
     expect(find.text('Staj tarihleri'), findsOneWidget);
+  });
+
+  testWidgets('Calendar never marks workdays before the internship starts as missing', (tester) async {
+    SharedPreferences.setMockInitialValues({'cepte_staj_state_v1': jsonEncode(_seededState())});
+    await _pumpAndSettleBoot(tester);
+
+    final state = Provider.of<AppState>(tester.element(find.text('Bugünü doldur')), listen: false);
+    final august = state.calendarForMonth(DateTime(2026, 8));
+    // 2026-08-14 is a Friday, three days before the seeded start (08-17).
+    expect(august[13].type, isNot(DayType.empty));
+    expect(august[16].type, isNot(DayType.notWorkday));
   });
 }
