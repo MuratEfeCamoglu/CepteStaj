@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../data/app_state.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_motion.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/lined_paper_background.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/responsive_content.dart';
 
@@ -24,6 +28,21 @@ class PaperModeScreen extends StatefulWidget {
 class _PaperModeScreenState extends State<PaperModeScreen> {
   int _doneCount = 0;
   double _fontScale = 0.38; // matches the ~38% slider position in the design
+
+  // Keep the screen on while copying — the user's eyes and hands are on the
+  // paper notebook, and the phone dimming mid-sentence breaks the flow.
+  // Failures (e.g. no plugin in tests) are harmless: the screen just dims.
+  @override
+  void initState() {
+    super.initState();
+    WakelockPlus.enable().catchError((_) {});
+  }
+
+  @override
+  void dispose() {
+    WakelockPlus.disable().catchError((_) {});
+    super.dispose();
+  }
 
   List<String> _linesFor(String topic, String body, String learned) {
     final lines = <String>[];
@@ -53,7 +72,7 @@ class _PaperModeScreenState extends State<PaperModeScreen> {
       backgroundColor: AppColors.screenBg,
       appBar: AppBar(
         leading: BackButton(color: AppColors.textPrimary),
-        title: Text('Kağıda geçir', style: AppTextStyles.body(fontSize: 15)),
+        title: Text('Kağıda geçir', style: AppTextStyles.head(fontSize: 18)),
       ),
       body: SafeArea(
         top: false,
@@ -76,7 +95,7 @@ class _PaperModeScreenState extends State<PaperModeScreen> {
                             ),
                           )
                         : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.fromLTRB(36, 12, 20, 12),
                     itemCount: lines.length,
                     itemBuilder: (context, i) {
                       final isDone = i < doneCount;
@@ -93,26 +112,50 @@ class _PaperModeScreenState extends State<PaperModeScreen> {
                         color = AppColors.textFaint;
                         opacity = 1;
                       }
+                      final duration = AppMotion.of(context, AppMotion.standard);
+                      // The line being copied right now is marked with the
+                      // highlighter; the mark moves down as lines are ticked.
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 4),
                         child: InkWell(
-                          onTap: isCurrent ? () => setState(() => _doneCount++) : null,
-                          child: Opacity(
+                          onTap: isCurrent
+                              ? () {
+                                  HapticFeedback.lightImpact();
+                                  setState(() => _doneCount++);
+                                }
+                              : null,
+                          child: AnimatedOpacity(
                             opacity: opacity,
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                if (isDone)
-                                  const Positioned(
-                                    left: -24,
-                                    top: 4,
-                                    child: Text('✓', style: TextStyle(color: AppColors.checkGreen, fontSize: 16)),
+                            duration: duration,
+                            child: AnimatedContainer(
+                              duration: duration,
+                              curve: AppMotion.standardCurve,
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              decoration: BoxDecoration(
+                                color: isCurrent ? AppColors.highlighter.withValues(alpha: AppColors.isDark ? 0.92 : 0.6) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  if (isDone)
+                                    const Positioned(
+                                      left: -28,
+                                      top: 4,
+                                      child: PopIn(
+                                        child: Icon(Icons.check_rounded, color: AppColors.checkGreen, size: 20),
+                                      ),
+                                    ),
+                                  Text(
+                                    lines[i],
+                                    style: AppTextStyles.body(
+                                      fontSize: fontSize,
+                                      height: 1.95,
+                                      color: isCurrent ? AppColors.onHighlighter : color,
+                                    ),
                                   ),
-                                Text(
-                                  lines[i],
-                                  style: AppTextStyles.body(fontSize: fontSize, height: 1.95, color: color),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -124,13 +167,29 @@ class _PaperModeScreenState extends State<PaperModeScreen> {
                 ResponsiveContent(
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.lg),
-                    decoration: BoxDecoration(color: AppColors.cardBg),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardBg,
+                      border: Border(top: BorderSide(color: AppColors.border)),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (!isEmpty) ...[
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(end: lines.isEmpty ? 0 : doneCount / lines.length),
+                            duration: AppMotion.of(context, AppMotion.standard),
+                            curve: AppMotion.standardCurve,
+                            builder: (context, v, _) => LinearProgressIndicator(
+                              value: v,
+                              minHeight: 6,
+                              color: allDone ? AppColors.checkGreen : AppColors.ink,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                        ],
                         Text(
                           isEmpty ? '' : allDone ? 'Tüm satırlar tamam' : '~$remaining satır kaldı',
-                          style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted),
+                          style: AppTextStyles.body(fontSize: 13, weight: FontWeight.w600, color: allDone ? AppColors.checkGreen : AppColors.textMuted),
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Row(

@@ -28,4 +28,27 @@ class PhotoService {
     await File(picked.path).copy(destPath);
     return destPath;
   }
+
+  /// Removes every stored photo file — used by "Tüm verileri sıfırla",
+  /// which promises the photos are gone, not just unlinked.
+  static Future<void> deleteAll() async {
+    final docsDir = await getApplicationDocumentsDirectory();
+    final photosDir = Directory('${docsDir.path}/photos');
+    if (await photosDir.exists()) {
+      await photosDir.delete(recursive: true);
+    }
+  }
+
+  /// Deletes files in the photos folder that [keepPaths] no longer points
+  /// at — after a restore, the replaced state's photos are orphans.
+  static Future<void> deleteUnreferenced(Set<String> keepPaths) async {
+    final docsDir = await getApplicationDocumentsDirectory();
+    final photosDir = Directory('${docsDir.path}/photos');
+    if (!await photosDir.exists()) return;
+    await for (final f in photosDir.list()) {
+      if (f is File && !keepPaths.contains(f.path)) {
+        await f.delete();
+      }
+    }
+  }
 }

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/tr_text.dart';
+import '../../core/app_info.dart';
 import '../../core/backup_service.dart';
-import '../../core/pdf_export.dart';
 import '../../data/app_state.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/export_sheet.dart';
 import '../../widgets/responsive_content.dart';
 import '../lock/pin_lock_screen.dart';
 import '../wrapped/wrapped_screen.dart';
@@ -27,7 +29,10 @@ class SettingsScreen extends StatelessWidget {
           ResponsiveContent(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm),
-              child: Text('Ayarlar', style: AppTextStyles.disp(fontSize: 26)),
+              child: SizedBox(
+                width: double.infinity,
+                child: Text('Ayarlar', style: AppTextStyles.disp(fontSize: 30)),
+              ),
             ),
           ),
           Expanded(
@@ -98,8 +103,8 @@ class SettingsScreen extends StatelessWidget {
                 _SettingsSection(title: 'Veri', children: [
                   _SettingsTile(
                     icon: Icons.picture_as_pdf_outlined,
-                    label: 'Resmi Defter PDF',
-                    onTap: () => _exportPdf(context, state),
+                    label: 'Resmi Defter (PDF / Word)',
+                    onTap: () => showExportSheet(context),
                   ),
                   _SettingsTile(
                     icon: Icons.ios_share_outlined,
@@ -122,12 +127,12 @@ class SettingsScreen extends StatelessWidget {
                 _SettingsSection(title: 'Hakkında', children: [
                   _SettingsTile(
                     icon: Icons.info_outline,
-                    label: 'CepteStaj hakkında',
-                    trailing: 'v1.0.0',
+                    label: 'Cepte Staj hakkında',
+                    trailing: 'v${AppInfo.version}',
                     onTap: () => showAboutDialog(
                       context: context,
                       applicationName: 'Cepte Staj',
-                      applicationVersion: 'v1.0.0',
+                      applicationVersion: 'v${AppInfo.version}',
                       applicationLegalese: 'Verilerin yalnızca telefonunda tutulur. Günlüğüm asla Resmi Defter PDF\'ine girmez.',
                     ),
                   ),
@@ -251,18 +256,6 @@ class SettingsScreen extends StatelessWidget {
     }
   }
 
-  void _exportPdf(BuildContext context, AppState state) async {
-    final i = state.internship;
-    if (i == null) return;
-    try {
-      await PdfExportService.shareOfficialNotebookPdf(internship: i, entries: state.allEntries, photos: state.photos);
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PDF oluşturulamadı')));
-      }
-    }
-  }
-
   void _backup(BuildContext context, AppState state) async {
     try {
       await BackupService.exportAndShare(state.toBackupJson());
@@ -340,19 +333,19 @@ class _SettingsSection extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(title.toUpperCase(),
-              style: AppTextStyles.body(fontSize: 11, weight: FontWeight.w600, color: AppColors.textFaint)
-                  .copyWith(letterSpacing: 0.6)),
+          child: Text(title.toUpperTr(), style: AppTextStyles.label()),
         ),
         Container(
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: AppColors.cardBg,
-            borderRadius: BorderRadius.circular(AppRadius.card),
+            borderRadius: BorderRadius.circular(AppRadius.cardLarge),
+            boxShadow: AppColors.cardShadow,
           ),
           child: Column(
             children: [
               for (var i = 0; i < children.length; i++) ...[
-                if (i > 0) Divider(height: 1, indent: AppSpacing.lg, endIndent: AppSpacing.lg, color: AppColors.border),
+                if (i > 0) Divider(height: 1, indent: 64, endIndent: AppSpacing.lg, color: AppColors.border),
                 children[i],
               ],
             ],
@@ -380,20 +373,38 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = color ?? AppColors.ink;
     return InkWell(
       onTap: onTap,
+      highlightColor: AppColors.sunkenBg,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: color ?? AppColors.textPrimary),
+            // Icon on a tinted rounded square — gives each row a quick
+            // visual anchor, the way modern settings lists do.
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: AppColors.isDark ? 0.22 : 0.11),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 19, color: accent),
+            ),
             const SizedBox(width: AppSpacing.md),
-            Expanded(child: Text(label, style: AppTextStyles.body(fontSize: 14, color: AppColors.textPrimary))),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTextStyles.body(fontSize: 15, weight: FontWeight.w500, color: color ?? AppColors.textPrimary),
+              ),
+            ),
             if (trailing != null)
               Text(trailing!, style: AppTextStyles.body(fontSize: 13, color: AppColors.textMuted)),
             if (onTap != null) ...[
               const SizedBox(width: 4),
-              Icon(Icons.chevron_right, size: 18, color: AppColors.textFaint),
+              Icon(Icons.chevron_right_rounded, size: 20, color: AppColors.textFaint),
             ],
           ],
         ),

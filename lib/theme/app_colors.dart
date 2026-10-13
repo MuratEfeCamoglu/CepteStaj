@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// Color tokens for the modernist-minimalist visual design.
+/// Color tokens — "defter ve fosforlu kalem".
 ///
-/// Neutral (near-white / near-black) base with a single accent — teal
-/// "ink" for the official notebook side. The private journal side
-/// (Günlüğüm) is told apart only by a quieter secondary tone ("clay"),
-/// never by loud color blocking. Surfaces carry no borders: a card reads
-/// as a card purely by sitting on a slightly different tone than the
-/// page behind it, plus generous whitespace.
+/// A cool paper-white page (not cream) with one ink color for the official
+/// notebook side: the teal of the app icon. The private Günlüğüm side gets
+/// its own warm coral, so the user can tell which layer they're in at a
+/// glance (claude.md §5). The one loud color is [highlighter] — the
+/// fluorescent marker a student drags over what matters — and it's spent
+/// only on the few numbers/words that deserve it.
 ///
 /// Surface/text/border tokens are getters driven by [setDark], flipped
 /// once from [AppState] whenever the theme setting changes — every
@@ -21,34 +21,50 @@ class AppColors {
   static void setDark(bool value) => _dark = value;
 
   // ── Brand accents — same in both themes ──────────────────────────────
-  static const ink = Color(0xFF0C6B66);
-  static const inkDark = Color(0xFF094F4B);
-  static const terra = Color(0xFFA8592E);
+  /// Official side: ballpoint-teal, matches the launcher icon.
+  static const ink = Color(0xFF0B7468);
+  static const inkDark = Color(0xFF07554C);
+  /// Private side (Günlüğüm): warm coral.
+  static const coral = Color(0xFFEE6545);
   static const onInk = Color(0xFFFFFFFF);
-  static const warning = Color(0xFF8A6100);
-  static const checkGreen = Color(0xFF3F7A2E);
+  /// Fluorescent marker — signature accent. Always paired with dark text.
+  static const highlighter = Color(0xFFE4F95B);
+  static const onHighlighter = Color(0xFF1B2410);
+  static const warning = Color(0xFFB4690E);
+  static const checkGreen = Color(0xFF2E9457);
 
   // ── Backgrounds ───────────────────────────────────────────────────────
-  // Page background — flat, neutral, almost-white / almost-black.
-  static Color get outerBg => _dark ? const Color(0xFF121212) : const Color(0xFFFAFAF8);
-  static Color get screenBg => _dark ? const Color(0xFF121212) : const Color(0xFFFAFAF8);
-  // Card/elevated surface — one tone lighter (dark) / whiter (light) than
-  // the page, no border needed to read as a distinct surface.
-  static Color get cardBg => _dark ? const Color(0xFF1C1C1B) : const Color(0xFFFFFFFF);
+  // Page background — cool paper white / blue-black.
+  static Color get outerBg => _dark ? const Color(0xFF0F1416) : const Color(0xFFF4F6F8);
+  static Color get screenBg => _dark ? const Color(0xFF0F1416) : const Color(0xFFF4F6F8);
+  // Card/elevated surface — reads as a card by tone + a soft shadow
+  // ([cardShadow]), never by an outline.
+  static Color get cardBg => _dark ? const Color(0xFF182024) : const Color(0xFFFFFFFF);
   // Sunken tonal fill — progress tracks, unselected pills, inline chips.
-  static Color get sunkenBg => _dark ? const Color(0xFF242423) : const Color(0xFFF0F0EC);
+  static Color get sunkenBg => _dark ? const Color(0xFF222B30) : const Color(0xFFE9EDF0);
 
   // ── Text ──────────────────────────────────────────────────────────────
-  static Color get textPrimary => _dark ? const Color(0xFFF3F2EE) : const Color(0xFF1A1A18);
-  static Color get textMuted => _dark ? const Color(0xFFA3A29B) : const Color(0xFF6C6B65);
-  static Color get textFaint => _dark ? const Color(0xFF5C5B56) : const Color(0xFFA6A59D);
+  static Color get textPrimary => _dark ? const Color(0xFFEEF2F3) : const Color(0xFF13191C);
+  static Color get textMuted => _dark ? const Color(0xFF9AA8AE) : const Color(0xFF59666C);
+  static Color get textFaint => _dark ? const Color(0xFF56656C) : const Color(0xFF9AA6AC);
 
   // ── Borders ─────────────────────────────────────────────────────────
   // Reserved for hairline dividers and functional outlines only — never
   // used to box in a card.
-  static Color get border => _dark ? const Color(0xFF2A2A28) : const Color(0xFFE9E8E3);
-  static Color get borderLight => _dark ? const Color(0xFF3C3C38) : const Color(0xFFD4D3CB);
+  static Color get border => _dark ? const Color(0xFF26313A) : const Color(0xFFE2E7EA);
+  static Color get borderLight => _dark ? const Color(0xFF34424A) : const Color(0xFFC9D2D7);
 
-  // ── Terra tint (private-side tonal backgrounds/chips) ────────────────
-  static Color get terraLight => _dark ? const Color(0xFF35271C) : const Color(0xFFF2E4D8);
+  // ── Tints ─────────────────────────────────────────────────────────────
+  static Color get inkLight => _dark ? const Color(0xFF12322F) : const Color(0xFFDDF0EC);
+  /// Private-side tonal backgrounds/chips.
+  static Color get coralLight => _dark ? const Color(0xFF3A231D) : const Color(0xFFFFE6DE);
+
+  /// Soft, two-layer elevation for cards and the primary button — modern
+  /// "floating paper" instead of flat tone-on-tone.
+  static List<BoxShadow> get cardShadow => _dark
+      ? const [BoxShadow(color: Color(0x66000000), blurRadius: 18, offset: Offset(0, 8))]
+      : const [
+          BoxShadow(color: Color(0x0D13191C), blurRadius: 2, offset: Offset(0, 1)),
+          BoxShadow(color: Color(0x1413191C), blurRadius: 24, offset: Offset(0, 10)),
+        ];
 }

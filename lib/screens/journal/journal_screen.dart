@@ -7,6 +7,8 @@ import '../../models/models.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_motion.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/responsive_content.dart';
 import '../lock/pin_lock_screen.dart';
 
@@ -99,7 +101,7 @@ class _JournalScreenState extends State<JournalScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Günlüğüm', style: AppTextStyles.disp(fontSize: 26)),
+                          Text('Günlüğüm', style: AppTextStyles.hand(fontSize: 44)),
                           if (state.hasPinLock)
                             InkWell(
                               onTap: state.lockPersonalNow,
@@ -119,14 +121,24 @@ class _JournalScreenState extends State<JournalScreen> {
                     ResponsiveContent(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.lock_outline, size: 12, color: AppColors.terra),
-                            const SizedBox(width: 6),
-                            Text('Deftere gitmez',
-                                style: AppTextStyles.body(fontSize: 11, weight: FontWeight.w600, color: AppColors.terra)),
-                          ],
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppColors.coralLight,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.lock_rounded, size: 12, color: AppColors.coral),
+                                const SizedBox(width: 6),
+                                Text('Deftere gitmez',
+                                    style: AppTextStyles.body(fontSize: 11, weight: FontWeight.w600, color: AppColors.coral)),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -138,6 +150,7 @@ class _JournalScreenState extends State<JournalScreen> {
                             child: Column(
                               children: [
                                 _JournalCard(
+                                  index: 0,
                                   child: _TodayCard(
                                     state: state,
                                     date: selectedDate,
@@ -148,19 +161,19 @@ class _JournalScreenState extends State<JournalScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: AppSpacing.md),
-                                _JournalCard(child: _MoodHistoryCard(state: state)),
+                                _JournalCard(index: 1, child: _MoodHistoryCard(state: state)),
                                 const SizedBox(height: AppSpacing.md),
                                 Row(
                                   children: [
-                                    Expanded(child: _JournalCard(height: 160, child: _BingoCard(state: state))),
+                                    Expanded(child: _JournalCard(index: 2, height: 160, child: _BingoCard(state: state))),
                                     const SizedBox(width: AppSpacing.md),
-                                    Expanded(child: _JournalCard(height: 160, child: _BadgesCard(state: state))),
+                                    Expanded(child: _JournalCard(index: 3, height: 160, child: _BadgesCard(state: state))),
                                   ],
                                 ),
                                 const SizedBox(height: AppSpacing.md),
-                                _JournalCard(child: _MentorCard(state: state)),
+                                _JournalCard(index: 4, child: _MentorCard(state: state)),
                                 const SizedBox(height: AppSpacing.md),
-                                _JournalCard(child: _CapsuleCard(state: state)),
+                                _JournalCard(index: 5, child: _CapsuleCard(state: state)),
                               ],
                             ),
                           ),
@@ -177,7 +190,7 @@ class _JournalScreenState extends State<JournalScreen> {
                   blastDirectionality: BlastDirectionality.explosive,
                   shouldLoop: false,
                   numberOfParticles: 24,
-                  colors: const [AppColors.terra, AppColors.ink, AppColors.checkGreen],
+                  colors: const [AppColors.coral, AppColors.ink, AppColors.checkGreen],
                 ),
               ),
             ],
@@ -191,19 +204,24 @@ class _JournalScreenState extends State<JournalScreen> {
 class _JournalCard extends StatelessWidget {
   final Widget child;
   final double? height;
-  const _JournalCard({required this.child, this.height});
+  final int index;
+  const _JournalCard({required this.child, this.height, this.index = 0});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: height,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.cardLarge),
+    return Entrance(
+      index: index,
+      child: Container(
+        width: double.infinity,
+        height: height,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.cardBg,
+          borderRadius: BorderRadius.circular(AppRadius.cardLarge),
+          boxShadow: AppColors.cardShadow,
+        ),
+        child: child,
       ),
-      child: child,
     );
   }
 }
@@ -248,7 +266,7 @@ class _TodayCard extends StatelessWidget {
             Expanded(
               child: Text(
                 _isToday ? 'Bugün nasıldı?' : '${_shortDate(date)} nasıldı?',
-                style: AppTextStyles.head(fontSize: 15),
+                style: AppTextStyles.hand(fontSize: 30),
               ),
             ),
             _DateStepButton(
@@ -307,7 +325,7 @@ class _TodayCard extends StatelessWidget {
           ],
         ),
         const _SectionDivider(),
-        Text('Günün Olayı', style: AppTextStyles.body(fontSize: 13, weight: FontWeight.w600)),
+        Text('Günün Olayı', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
         Text('Bugün başına gelen en absürt, komik ya da trajik şey.',
             style: AppTextStyles.body(fontSize: 11, color: AppColors.textMuted)),
         const SizedBox(height: AppSpacing.sm),
@@ -326,11 +344,11 @@ class _TodayCard extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         _MinimalField(controller: incidentCtrl, hint: 'Ne oldu?', onChanged: (v) => state.updateEntry(date, incident: v)),
         const _SectionDivider(),
-        Text('Günün küçük zaferi', style: AppTextStyles.body(fontSize: 13, weight: FontWeight.w600)),
+        Text('Günün küçük zaferi', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
         const SizedBox(height: AppSpacing.sm),
         _MinimalField(controller: winCtrl, hint: 'Bugün iyi giden bir şey', onChanged: (v) => state.updateEntry(date, dailyWin: v)),
         const _SectionDivider(),
-        Text('Bugünün şarkısı', style: AppTextStyles.body(fontSize: 13, weight: FontWeight.w600)),
+        Text('Bugünün şarkısı', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
         const SizedBox(height: AppSpacing.sm),
         _MinimalField(controller: songCtrl, hint: '🎵 Şarkı - sanatçı', onChanged: (v) => state.updateEntry(date, song: v)),
       ],
@@ -392,10 +410,11 @@ class _MinimalField extends StatelessWidget {
         hintText: hint,
         hintStyle: AppTextStyles.body(fontSize: 14, color: AppColors.textFaint),
         isDense: true,
+        filled: false,
         contentPadding: const EdgeInsets.symmetric(vertical: 8),
         border: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border)),
         enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border)),
-        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.terra)),
+        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.coral)),
       ),
     );
   }
@@ -409,18 +428,26 @@ class _MoodButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    final duration = AppMotion.of(context, AppMotion.standard);
+    return Pressable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        width: 44,
-        height: 44,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? AppColors.terraLight : AppColors.sunkenBg,
-          shape: BoxShape.circle,
+      pressedScale: 0.88,
+      child: AnimatedScale(
+        scale: selected ? 1.15 : 1,
+        duration: duration,
+        curve: AppMotion.settle,
+        child: AnimatedContainer(
+          duration: duration,
+          width: 48,
+          height: 48,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? AppColors.coralLight : AppColors.sunkenBg,
+            shape: BoxShape.circle,
+            border: Border.all(color: selected ? AppColors.coral : Colors.transparent, width: 2),
+          ),
+          child: Text(emoji, style: const TextStyle(fontSize: 22)),
         ),
-        child: Text(emoji, style: const TextStyle(fontSize: 20)),
       ),
     );
   }
@@ -434,16 +461,25 @@ class _ReasonChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return Pressable(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      pressedScale: 0.93,
+      child: AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.standard),
+        curve: AppMotion.standardCurve,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.terraLight : AppColors.sunkenBg,
+          color: selected ? AppColors.coral : AppColors.sunkenBg,
           borderRadius: BorderRadius.circular(999),
         ),
-        child: Text(label, style: AppTextStyles.body(fontSize: 12, color: selected ? AppColors.terra : AppColors.textMuted)),
+        child: Text(
+          label,
+          style: AppTextStyles.body(
+            fontSize: 12,
+            weight: selected ? FontWeight.w600 : FontWeight.w500,
+            color: selected ? AppColors.onInk : AppColors.textMuted,
+          ),
+        ),
       ),
     );
   }
@@ -457,17 +493,26 @@ class _WorkloadChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return Pressable(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.card),
-      child: Container(
+      child: AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.standard),
+        curve: AppMotion.standardCurve,
         alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(vertical: 9),
+        padding: const EdgeInsets.symmetric(vertical: 11),
         decoration: BoxDecoration(
-          color: selected ? AppColors.terra : AppColors.sunkenBg,
+          color: selected ? AppColors.coral : AppColors.sunkenBg,
           borderRadius: BorderRadius.circular(AppRadius.card),
         ),
-        child: Text(label, style: AppTextStyles.body(fontSize: 13, color: selected ? AppColors.onInk : AppColors.textMuted)),
+        child: Text(
+          label,
+          style: AppTextStyles.body(
+            fontSize: 13,
+            weight: FontWeight.w600,
+            color: selected ? AppColors.onInk : AppColors.textMuted,
+          ),
+        ),
       ),
     );
   }
@@ -485,7 +530,7 @@ class _MoodHistoryCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Son 7 gün', style: AppTextStyles.body(fontSize: 13, weight: FontWeight.w600)),
+        Text('Son 7 gün', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
         const SizedBox(height: AppSpacing.sm),
         SizedBox(
           height: 36,
@@ -498,16 +543,21 @@ class _MoodHistoryCard extends StatelessWidget {
                   child: Builder(builder: (context) {
                     final mood = state.entryFor(d).mood;
                     final h = mood == 0 ? 4.0 : 36 * (mood / 5);
-                    return Container(
-                      width: 10,
-                      height: h,
-                      decoration: BoxDecoration(
-                        color: mood == 0
-                            ? AppColors.sunkenBg
-                            : mood >= 4
-                                ? AppColors.terra
-                                : AppColors.terraLight,
-                        borderRadius: BorderRadius.circular(3),
+                    return TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 4, end: h),
+                      duration: AppMotion.of(context, AppMotion.slow),
+                      curve: AppMotion.emphasized,
+                      builder: (context, v, _) => Container(
+                        width: 14,
+                        height: v,
+                        decoration: BoxDecoration(
+                          color: mood == 0
+                              ? AppColors.sunkenBg
+                              : mood >= 4
+                                  ? AppColors.coral
+                                  : AppColors.coral.withValues(alpha: 0.45),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
                     );
                   }),
@@ -603,7 +653,7 @@ class _BingoSheet extends StatelessWidget {
                           padding: const EdgeInsets.all(8),
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: t.done ? AppColors.terra : AppColors.terraLight,
+                            color: t.done ? AppColors.coral : AppColors.coralLight,
                             borderRadius: BorderRadius.circular(AppRadius.card),
                           ),
                           child: Text(
@@ -666,7 +716,7 @@ class _BingoCard extends StatelessWidget {
                 onTap: () => _showBingoSheet(context),
                 child: Row(
                   children: [
-                    Text('Bingo', style: AppTextStyles.body(fontSize: 13, weight: FontWeight.w600)),
+                    Text('Bingo', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
                     const SizedBox(width: 4),
                     Icon(Icons.open_in_full, size: 12, color: AppColors.textFaint),
                   ],
@@ -697,7 +747,7 @@ class _BingoCard extends StatelessWidget {
                     onTap: () => state.toggleBingo(t.id),
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: t.done ? AppColors.terra : AppColors.terraLight,
+                        color: t.done ? AppColors.coral : AppColors.coralLight,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -735,7 +785,7 @@ void _showBadgesSheet(BuildContext context) {
                   height: 40,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: b.earned ? AppColors.terra : AppColors.terraLight,
+                    color: b.earned ? AppColors.coral : AppColors.coralLight,
                     shape: BoxShape.circle,
                   ),
                   child: Text(b.emoji, style: const TextStyle(fontSize: 18)),
@@ -768,7 +818,7 @@ class _BadgesCard extends StatelessWidget {
           onTap: () => _showBadgesSheet(context),
           child: Row(
             children: [
-              Text('Rozetler', style: AppTextStyles.body(fontSize: 13, weight: FontWeight.w600)),
+              Text('Rozetler', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
               const SizedBox(width: 4),
               Text(
                 '${state.badges.where((b) => b.earned).length}/${state.badges.length}',
@@ -793,7 +843,7 @@ class _BadgesCard extends StatelessWidget {
                     height: 32,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: b.earned ? AppColors.terra : AppColors.terraLight,
+                      color: b.earned ? AppColors.coral : AppColors.coralLight,
                       shape: BoxShape.circle,
                     ),
                     child: Text(b.emoji, style: TextStyle(fontSize: 14, color: b.earned ? AppColors.onInk : AppColors.textFaint)),
@@ -818,7 +868,7 @@ class _MentorCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: Text('Mentor sözlüğü', style: AppTextStyles.body(fontSize: 13, weight: FontWeight.w600))),
+            Expanded(child: Text('Mentor sözlüğü', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral))),
             if (state.mentorQuotes.isNotEmpty)
               TextButton(
                 onPressed: () => _showAllQuotes(context),
@@ -828,7 +878,7 @@ class _MentorCard extends StatelessWidget {
               onTap: () => _addQuote(context, state),
               child: const Padding(
                 padding: EdgeInsets.all(4),
-                child: Icon(Icons.add_circle_outline, size: 20, color: AppColors.terra),
+                child: Icon(Icons.add_circle_outline, size: 20, color: AppColors.coral),
               ),
             ),
           ],
@@ -928,9 +978,9 @@ class _CapsuleCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.hourglass_bottom, size: 16, color: AppColors.terra),
+            const Icon(Icons.hourglass_bottom, size: 16, color: AppColors.coral),
             const SizedBox(width: 6),
-            Text('Zaman Kapsülü', style: AppTextStyles.body(fontSize: 13, weight: FontWeight.w600)),
+            Text('Zaman Kapsülü', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
           ],
         ),
         const SizedBox(height: 8),
@@ -945,7 +995,7 @@ class _CapsuleCard extends StatelessWidget {
             child: const Text('Zaman kapsülünü aç'),
           )
         else
-          Text('Onboarding\'de bir beklenti/korku yazmadın.', style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)),
+          Text('Staj başında bir beklenti ya da korku yazmadın.', style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)),
       ],
     );
   }

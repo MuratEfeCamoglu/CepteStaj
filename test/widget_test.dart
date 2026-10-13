@@ -269,4 +269,38 @@ void main() {
     expect(august[13].type, isNot(DayType.empty));
     expect(august[16].type, isNot(DayType.notWorkday));
   });
+
+  testWidgets('Share button on a filled day offers WhatsApp, PDF and Word', (tester) async {
+    final now = DateTime.now();
+    final today = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final seeded = _seededState()
+      ..['entries'] = [
+        {'date': today, 'topic': 'API testleri', 'body': 'Postman ile uç noktaları denedim.', 'incident': 'GİZLİ'},
+      ];
+    SharedPreferences.setMockInitialValues({'cepte_staj_state_v1': jsonEncode(seeded)});
+    await _pumpAndSettleBoot(tester);
+
+    await tester.tap(find.text('Bugünü doldur'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Paylaş / indir'));
+    await tester.pumpAndSettle();
+
+    for (final label in ["WhatsApp'ta gönder", 'Başka uygulamada paylaş', 'PDF indir', 'Word (.docx) indir', 'PDF paylaş', 'Word paylaş']) {
+      expect(find.text(label), findsOneWidget, reason: label);
+    }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Share button on an empty day explains instead of opening the sheet', (tester) async {
+    SharedPreferences.setMockInitialValues({'cepte_staj_state_v1': jsonEncode(_seededState())});
+    await _pumpAndSettleBoot(tester);
+
+    await tester.tap(find.text('Bugünü doldur'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Paylaş / indir'));
+    await tester.pump();
+
+    expect(find.text('Bu gün için henüz defter yazısı yok.'), findsOneWidget);
+    expect(find.text("WhatsApp'ta gönder"), findsNothing);
+  });
 }

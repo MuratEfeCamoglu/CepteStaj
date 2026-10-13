@@ -6,9 +6,11 @@ import '../../core/workday_calculator.dart';
 import '../../data/app_state.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_motion.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/lined_paper_background.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/responsive_content.dart';
 import '../../screens/shell/app_shell.dart';
@@ -166,13 +168,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(999),
-                            child: LinearProgressIndicator(
-                              value: i <= _step ? 1 : 0,
-                              minHeight: 3,
-                              backgroundColor: AppColors.sunkenBg,
-                              valueColor: const AlwaysStoppedAnimation(AppColors.ink),
+                          child: Container(
+                            height: 5,
+                            clipBehavior: Clip.antiAlias,
+                            decoration: BoxDecoration(
+                              color: AppColors.sunkenBg,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: AnimatedFractionallySizedBox(
+                              alignment: Alignment.centerLeft,
+                              widthFactor: i <= _step ? 1 : 0,
+                              duration: AppMotion.of(context, AppMotion.slow),
+                              curve: AppMotion.emphasized,
+                              child: const ColoredBox(color: AppColors.ink),
                             ),
                           ),
                         ),
@@ -257,13 +265,19 @@ class _StepScaffold extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTextStyles.disp(fontSize: 24)),
+                Entrance(child: Text(title, style: AppTextStyles.disp(fontSize: 32))),
                 if (subtitle != null) ...[
                   const SizedBox(height: AppSpacing.sm),
-                  Text(subtitle!, style: AppTextStyles.body(fontSize: 14, color: AppColors.textMuted)),
+                  Entrance(
+                    index: 1,
+                    child: Text(subtitle!, style: AppTextStyles.body(fontSize: 15, color: AppColors.textMuted, height: 1.4)),
+                  ),
                 ],
                 const SizedBox(height: AppSpacing.xl),
-                ...children,
+                Entrance(
+                  index: 2,
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+                ),
               ],
             ),
           ),
@@ -313,18 +327,25 @@ class _InfoCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.cardBg,
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(AppRadius.cardLarge),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: AppColors.ink),
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: AppColors.inkLight, borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, size: 20, color: AppColors.ink),
+          ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTextStyles.head(fontSize: 14)),
+                Text(title, style: AppTextStyles.head(fontSize: 16)),
                 const SizedBox(height: 4),
                 Text(body, style: AppTextStyles.body(fontSize: 13, color: AppColors.textMuted)),
               ],
@@ -595,8 +616,9 @@ class _DatePickerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = label ?? _fmt(date!);
-    return InkWell(
+    return Pressable(
       onTap: onTap,
+      pressedScale: 0.92,
       borderRadius: BorderRadius.circular(AppRadius.card),
       child: Container(
         width: double.infinity,
@@ -629,8 +651,9 @@ class _StepperButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return Pressable(
       onTap: onTap,
+      pressedScale: 0.92,
       borderRadius: BorderRadius.circular(999),
       child: Container(
         width: 44,
@@ -651,12 +674,15 @@ class _DayChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return Pressable(
       onTap: onTap,
+      pressedScale: 0.92,
       borderRadius: BorderRadius.circular(999),
-      child: Container(
+      child: AnimatedContainer(
+        duration: AppMotion.of(context, AppMotion.standard),
+        curve: AppMotion.standardCurve,
         width: 48,
-        height: 40,
+        height: 44,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? AppColors.ink : AppColors.sunkenBg,

@@ -24,7 +24,7 @@ class NotificationService {
         // Fall back to whatever `tz.local` defaults to (UTC) — the
         // reminder will still fire, just possibly at a shifted hour.
       }
-      const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidInit = AndroidInitializationSettings('ic_stat_notification');
       const iosInit = DarwinInitializationSettings();
       const initSettings = InitializationSettings(android: androidInit, iOS: iosInit);
       await _plugin.initialize(settings: initSettings);

@@ -357,13 +357,13 @@ class AppBadge {
 
 /// Colors that flip depending on which "side" of the app is active: the
 /// shared/official notebook side (teal) vs. the private journal side
-/// (terra).
+/// (coral).
 class SectionAccent {
   final Color color;
   const SectionAccent(this.color);
 
   static SectionAccent get notebook => SectionAccent(AppColors.ink);
-  static SectionAccent get journal => SectionAccent(AppColors.terra);
+  static SectionAccent get journal => SectionAccent(AppColors.coral);
 }
 
 const List<(String emoji, String label)> incidentCategories = [

@@ -546,6 +546,10 @@ class AppState extends ChangeNotifier {
     _pinHash = null;
     personalUnlockedThisSession = true;
     await LocalStore.clear();
+    // No internship left to remind about, and no photo files left behind.
+    // Fire-and-forget: the UI shouldn't wait on platform/disk work.
+    unawaited(NotificationService.cancelDailyReminder());
+    unawaited(PhotoService.deleteAll().catchError((_) {}));
     notifyListeners();
   }
 
@@ -612,6 +616,10 @@ class AppState extends ChangeNotifier {
     try {
       _applyBackupJson(json, notify: true);
       await saveNow();
+      unawaited(
+        PhotoService.deleteUnreferenced(photos.map((p) => p.filePath).toSet())
+            .catchError((_) {}),
+      );
       return true;
     } catch (_) {
       return false;

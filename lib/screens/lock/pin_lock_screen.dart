@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/primary_button.dart';
 
 /// Shown in place of the Günlüğüm tab's content when a PIN is set and the
@@ -20,6 +22,7 @@ class PersonalLockView extends StatefulWidget {
 class _PersonalLockViewState extends State<PersonalLockView> {
   final _ctrl = TextEditingController();
   String? _error;
+  int _attempts = 0;
 
   @override
   void dispose() {
@@ -32,7 +35,11 @@ class _PersonalLockViewState extends State<PersonalLockView> {
     if (state.unlockPersonal(_ctrl.text)) {
       setState(() => _error = null);
     } else {
-      setState(() => _error = 'Yanlış PIN');
+      HapticFeedback.mediumImpact();
+      setState(() {
+        _error = 'Yanlış PIN';
+        _attempts++;
+      });
       _ctrl.clear();
     }
   }
@@ -45,31 +52,67 @@ class _PersonalLockViewState extends State<PersonalLockView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.lock_outline, size: 40, color: AppColors.terra),
+            PopIn(
+              child: Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.coralLight,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock_rounded,
+                  size: 32,
+                  color: AppColors.coral,
+                ),
+              ),
+            ),
             const SizedBox(height: AppSpacing.lg),
-            Text('Günlüğüm kilitli', style: AppTextStyles.head(fontSize: 18)),
+            Text('Günlüğüm kilitli', style: AppTextStyles.hand(fontSize: 34)),
             const SizedBox(height: AppSpacing.sm),
-            Text('Devam etmek için PIN gir', style: AppTextStyles.body(fontSize: 13, color: AppColors.textMuted)),
+            Text(
+              'Devam etmek için PIN gir',
+              style: AppTextStyles.body(
+                fontSize: 13,
+                color: AppColors.textMuted,
+              ),
+            ),
             const SizedBox(height: AppSpacing.lg),
-            TextField(
-              controller: _ctrl,
-              obscureText: true,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              maxLength: 8,
-              style: AppTextStyles.head(fontSize: 20),
-              onSubmitted: (_) => _submit(),
-              decoration: InputDecoration(
-                counterText: '',
-                errorText: _error,
-                filled: true,
-                fillColor: AppColors.sunkenBg,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.card), borderSide: BorderSide.none),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.card), borderSide: const BorderSide(color: AppColors.terra, width: 1.5)),
+            Shake(
+              trigger: _attempts,
+              child: TextField(
+                controller: _ctrl,
+                obscureText: true,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                maxLength: 8,
+                style: AppTextStyles.head(fontSize: 20),
+                onSubmitted: (_) => _submit(),
+                decoration: InputDecoration(
+                  counterText: '',
+                  errorText: _error,
+                  filled: true,
+                  fillColor: AppColors.sunkenBg,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    borderSide: const BorderSide(
+                      color: AppColors.coral,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            PrimaryButton(label: 'Kilidi aç', color: AppColors.terra, onTap: _submit),
+            PrimaryButton(
+              label: 'Kilidi aç',
+              color: AppColors.coral,
+              onTap: _submit,
+            ),
           ],
         ),
       ),
@@ -93,7 +136,10 @@ Future<String?> showPinDialog(BuildContext context, {required String title}) {
         decoration: const InputDecoration(counterText: ''),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Vazgeç')),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Vazgeç'),
+        ),
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(ctrl.text.trim()),
           child: const Text('Tamam'),

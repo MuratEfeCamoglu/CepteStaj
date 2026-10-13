@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 /// Faint repeating horizontal rule lines, evoking a paper notebook page.
 class LinedPaperBackground extends StatelessWidget {
   final double lineHeight;
-  final Color lineColor;
+  final Color? lineColor;
   final double opacity;
 
   const LinedPaperBackground({
     super.key,
     this.lineHeight = 32,
-    this.lineColor = const Color(0xFF232019),
+    this.lineColor,
     this.opacity = 0.06,
   });
 
@@ -20,7 +22,7 @@ class LinedPaperBackground extends StatelessWidget {
         child: CustomPaint(
           painter: _LinedPaperPainter(
             lineHeight: lineHeight,
-            color: lineColor.withValues(alpha: opacity),
+            color: (lineColor ?? AppColors.textPrimary).withValues(alpha: opacity),
           ),
         ),
       ),

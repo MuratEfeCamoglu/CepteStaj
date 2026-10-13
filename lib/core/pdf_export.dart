@@ -4,7 +4,6 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:share_plus/share_plus.dart';
 
 import '../models/models.dart';
 
@@ -27,6 +26,18 @@ class PdfExportService {
   }
 
   static Future<File> buildOfficialNotebookPdf({
+    required Internship internship,
+    required List<DayEntry> entries,
+    List<DayPhoto> photos = const [],
+  }) async {
+    final bytes = await buildOfficialNotebookPdfBytes(internship: internship, entries: entries, photos: photos);
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/resmi_defter_${DateTime.now().millisecondsSinceEpoch}.pdf');
+    await file.writeAsBytes(bytes);
+    return file;
+  }
+
+  static Future<Uint8List> buildOfficialNotebookPdfBytes({
     required Internship internship,
     required List<DayEntry> entries,
     List<DayPhoto> photos = const [],
@@ -101,30 +112,7 @@ class PdfExportService {
       ),
     );
 
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/resmi_defter_${DateTime.now().millisecondsSinceEpoch}.pdf');
-    await file.writeAsBytes(await doc.save());
-    return file;
-  }
-
-  static Future<void> shareOfficialNotebookPdf({
-    required Internship internship,
-    required List<DayEntry> entries,
-    List<DayPhoto> photos = const [],
-  }) async {
-    try {
-      final file = await buildOfficialNotebookPdf(internship: internship, entries: entries, photos: photos);
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          subject: 'Resmi Defter — ${internship.name}',
-          text: 'Cepte Staj — Resmi Defter PDF',
-        ),
-      );
-    } catch (e) {
-      debugPrint('PDF export/share failed: $e');
-      rethrow;
-    }
+    return doc.save();
   }
 
   static String _formatDate(String isoDate) {

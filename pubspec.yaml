@@ -30,10 +30,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  # Plus Jakarta Sans (display/headings) + Inter (body/tabs) — matches the
-  # "Kağıt ve Mürekkep" visual design tokens.
-  google_fonts: ^6.2.1
+  # Turkish strings for built-in widgets (date/time pickers, copy/paste
+  # menu, About dialog) — otherwise they render in English.
+  flutter_localizations:
+    sdk: flutter
 
   # Simple app-wide state (streaks, counters, notebook entries).
   provider: ^6.1.2
@@ -41,14 +41,18 @@ dependencies:
   image_picker: ^1.2.2
   path_provider: ^2.1.5
   pdf: ^3.12.0
-  share_plus: ^12.0.2
+  share_plus: ^13.3.1
   flutter_local_notifications: ^20.1.0
   timezone: ^0.10.1
-  file_picker: ^11.0.3
+  file_picker: ^13.1.0
   confetti: ^0.8.0
   crypto: ^3.0.7
   flutter_timezone: ^5.1.0
   collection: ^1.19.1
+  wakelock_plus: ^1.5.2
+  archive: ^4.0.9
+  package_info_plus: ^10.2.2
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +64,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  xml: ^6.6.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -76,6 +81,40 @@ flutter:
     - assets/fonts/roboto-regular.ttf
     - assets/fonts/roboto-bold.ttf
     - assets/fonts/roboto-italic.ttf
+    - assets/fonts/Inter-OFL.txt
+    - assets/fonts/BricolageGrotesque-OFL.txt
+    - assets/fonts/Caveat-OFL.txt
+    - assets/fonts/Roboto-OFL.txt
+
+  # Bricolage Grotesque (display/headings) + Inter (body/tabs), and Caveat —
+  # handwriting, used only on the private Günlüğüm side so the two layers
+  # read differently at a glance. Bundled (not fetched at
+  # runtime) so the app looks right offline and needs no INTERNET permission.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-400.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-500.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-600.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-700.ttf
+          weight: 700
+    - family: BricolageGrotesque
+      fonts:
+        - asset: assets/fonts/BricolageGrotesque-600.ttf
+          weight: 600
+        - asset: assets/fonts/BricolageGrotesque-700.ttf
+          weight: 700
+        - asset: assets/fonts/BricolageGrotesque-800.ttf
+          weight: 800
+    - family: Caveat
+      fonts:
+        - asset: assets/fonts/Caveat-600.ttf
+          weight: 600
+        - asset: assets/fonts/Caveat-700.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

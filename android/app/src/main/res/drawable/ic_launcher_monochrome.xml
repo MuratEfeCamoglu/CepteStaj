@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed-icon silhouette: the 24dp notification glyph scaled into the
+     adaptive icon's 108dp canvas, inside the 66dp safe zone. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_stat_notification"
+    android:inset="30dp" />

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar notification icon: Android draws only the alpha channel,
+     so this must be a flat white silhouette (notebook + check mark). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M7,2h11a2,2 0,0 1,2 2v16a2,2 0,0 1,-2 2H7a2,2 0,0 1,-2 -2V4a2,2 0,0 1,2 -2zM8.4,12.6l-1.4,1.4l3.5,3.5l6.5,-6.5l-1.4,-1.4l-5.1,5.1z"
+        android:fillType="evenOdd" />
+</vector>

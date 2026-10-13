@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
-/// Typography tokens. Plus Jakarta Sans for display/headings, Inter for
-/// body copy and tab labels — matches the design doc's `.disp` / `.head`
-/// / `.tab` classes.
+/// Typography tokens.
+///
+/// - [disp] / [head]: Bricolage Grotesque — a grotesk with a bit of ink-trap
+///   character, set tight and heavy for numbers and screen titles.
+/// - [body] / [tab] / [label]: Inter — neutral, highly legible body copy.
+/// - [hand]: Caveat handwriting — only on the private Günlüğüm side, where
+///   the app should feel like your own diary rather than a form.
 ///
 /// Colors default to the current theme's text tokens via `??` (not a
 /// literal default value) because [AppColors.textPrimary] etc. are
@@ -14,16 +17,18 @@ class AppTextStyles {
   AppTextStyles._();
 
   static TextStyle disp({
-    double fontSize = 28,
+    double fontSize = 30,
     Color? color,
     double? height,
+    FontWeight weight = FontWeight.w800,
   }) =>
-      GoogleFonts.plusJakartaSans(
+      TextStyle(
+        fontFamily: 'BricolageGrotesque',
         fontSize: fontSize,
-        fontWeight: FontWeight.w700,
+        fontWeight: weight,
         color: color ?? AppColors.textPrimary,
-        height: height,
-        letterSpacing: -0.4,
+        height: height ?? 1.1,
+        letterSpacing: -0.03 * fontSize,
       );
 
   static TextStyle head({
@@ -31,12 +36,13 @@ class AppTextStyles {
     Color? color,
     double? height,
   }) =>
-      GoogleFonts.plusJakartaSans(
+      TextStyle(
+        fontFamily: 'BricolageGrotesque',
         fontSize: fontSize,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         color: color ?? AppColors.textPrimary,
         height: height,
-        letterSpacing: -0.2,
+        letterSpacing: -0.02 * fontSize,
       );
 
   static TextStyle body({
@@ -45,18 +51,44 @@ class AppTextStyles {
     Color? color,
     double? height,
   }) =>
-      GoogleFonts.inter(
+      TextStyle(
+        fontFamily: 'Inter',
         fontSize: fontSize,
         fontWeight: weight,
         color: color ?? AppColors.textPrimary,
         height: height,
+        letterSpacing: -0.1,
+      );
+
+  /// Small uppercase section label ("HIZLI SAYAÇLAR"), tracked out.
+  static TextStyle label({Color? color}) => TextStyle(
+        fontFamily: 'Inter',
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: color ?? AppColors.textMuted,
+        letterSpacing: 1.1,
+      );
+
+  /// Handwriting — personal (Günlüğüm) headings and prompts only.
+  static TextStyle hand({
+    double fontSize = 24,
+    Color? color,
+    FontWeight weight = FontWeight.w700,
+  }) =>
+      TextStyle(
+        fontFamily: 'Caveat',
+        fontSize: fontSize,
+        fontWeight: weight,
+        color: color ?? AppColors.textPrimary,
+        height: 1.05,
       );
 
   static TextStyle tab({
     Color? color,
     FontWeight weight = FontWeight.w400,
   }) =>
-      GoogleFonts.inter(
+      TextStyle(
+        fontFamily: 'Inter',
         fontSize: 11,
         fontWeight: weight,
         color: color ?? AppColors.textMuted,
