@@ -3,6 +3,9 @@
          via an intent, which needs none. Declaring it would only add a
          runtime prompt and an extra line in the Play Store permission list. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Only for looking up a shared Spotify link's song name
+         (lib/core/song_lookup.dart). Nothing the user writes is sent. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application
         android:label="Cepte Staj"
@@ -12,7 +15,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
@@ -29,6 +32,13 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- Spotify → Share → Cepte Staj fills in "Bugünün şarkısı"
+                 (MainActivity.kt, lib/core/share_receiver.dart). -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
@@ -58,6 +68,11 @@
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="whatsapp"/>
+        </intent>
+        <!-- "Spotify'da aç / ara" next to the song of the day. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="spotify"/>
         </intent>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>

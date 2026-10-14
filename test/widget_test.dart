@@ -12,6 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cepte_staj/data/app_state.dart';
 import 'package:cepte_staj/main.dart';
 import 'package:cepte_staj/models/models.dart';
+import 'package:cepte_staj/theme/app_colors.dart';
+import 'package:cepte_staj/widgets/app_bottom_nav.dart';
 
 Future<void> _pumpAndSettleBoot(WidgetTester tester) async {
   await tester.pumpWidget(const CepteStajApp());
@@ -57,6 +59,9 @@ Map<String, dynamic> _seededState() => {
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    // A fresh install picks its language from the phone; these tests read
+    // the Turkish UI.
+    TestWidgetsFlutterBinding.ensureInitialized().platformDispatcher.localeTestValue = const Locale('tr', 'TR');
   });
 
   testWidgets('Fresh install boots from splash into onboarding', (WidgetTester tester) async {
@@ -202,21 +207,6 @@ void main() {
     expect(find.text('Bugünkü olay'), findsOneWidget);
   });
 
-  testWidgets('Kağıda geçir on an empty day does not mark it as written', (tester) async {
-    SharedPreferences.setMockInitialValues({'cepte_staj_state_v1': jsonEncode(_seededState())});
-    await _pumpAndSettleBoot(tester);
-
-    await tester.tap(find.text('Bugünü doldur'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Kağıda geçir'));
-    await tester.pumpAndSettle();
-    expect(find.text('Bu gün için henüz bir defter kaydın yok.'), findsOneWidget);
-
-    await tester.tap(find.text('Geri dön'));
-    await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.check_circle), findsNothing);
-  });
-
   testWidgets('Bingo sheet opens, ticks a square and lets you rewrite it', (tester) async {
     final seeded = _seededState()
       ..['bingoTasks'] = [
@@ -280,7 +270,7 @@ void main() {
     SharedPreferences.setMockInitialValues({'cepte_staj_state_v1': jsonEncode(seeded)});
     await _pumpAndSettleBoot(tester);
 
-    await tester.tap(find.text('Bugünü doldur'));
+    await tester.tap(find.text('Bugünü düzenle'));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Paylaş / indir'));
     await tester.pumpAndSettle();
@@ -303,4 +293,88 @@ void main() {
     expect(find.text('Bu gün için henüz defter yazısı yok.'), findsOneWidget);
     expect(find.text("WhatsApp'ta gönder"), findsNothing);
   });
+
+  testWidgets('Switching to English and dark theme updates every tab in place', (tester) async {
+    SharedPreferences.setMockInitialValues({'cepte_staj_state_v1': jsonEncode(_seededState())});
+    await _pumpAndSettleBoot(tester);
+
+    final state = Provider.of<AppState>(tester.element(find.text('Bugünü doldur')), listen: false);
+    state.setLanguage('en');
+    state.setThemeMode('dark');
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Fill in today'), findsOneWidget);
+    expect(find.text('Calendar'), findsOneWidget);
+    expect(AppColors.isDark, isTrue);
+
+    await tester.tap(find.text('Calendar'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('days this month'), findsOneWidget);
+
+    state.setLanguage('tr');
+    state.setThemeMode('light');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('gün doldurdun'), findsOneWidget);
+  });
+
+  testWidgets('Tapping a calendar day previews it, a second tap opens it', (tester) async {
+    SharedPreferences.setMockInitialValues({'cepte_staj_state_v1': jsonEncode(_seededState())});
+    await _pumpAndSettleBoot(tester);
+    await tester.tap(find.text('Takvim'));
+    await tester.pumpAndSettle();
+
+    // Today is pre-selected, so its preview with the open button shows.
+    expect(find.text('Bu günü doldur'), findsOneWidget);
+    await tester.ensureVisible(find.text('Bu günü doldur'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bu günü doldur'));
+    await tester.pumpAndSettle();
+    expect(find.text('Defter'), findsOneWidget);
+  });
+
+  for (final lang in ['tr', 'en']) {
+    testWidgets('Every tab lays out on a small phone without overflow ($lang, dark)', (tester) async {
+      tester.view.physicalSize = const Size(360, 690);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final now = DateTime.now();
+      final today = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final seeded = _seededState()
+        ..['language'] = lang
+        ..['themeMode'] = 'dark'
+        ..['entries'] = [
+          {
+            'date': today,
+            'topic': 'Çok uzun bir konu başlığı ki tek satıra kesinlikle sığmasın diye yazıldı',
+            'body': 'Bugün epey uzun bir metin yazdım. ' * 20,
+            'mood': 4,
+            'song': 'Save The Day (feat. Coi Leray & LouGotCash)',
+            'songUrl': 'https://open.spotify.com/track/x',
+            'checkIn': '09:00',
+            'checkOut': '18:00',
+          },
+        ];
+      SharedPreferences.setMockInitialValues({'cepte_staj_state_v1': jsonEncode(seeded)});
+      await _pumpAndSettleBoot(tester);
+
+      for (var tab = 0; tab < 4; tab++) {
+        await tester.tap(find.descendant(of: find.byType(AppBottomNav), matching: find.byType(InkWell)).at(tab));
+        await tester.pumpAndSettle();
+        final scrollable = find.byType(Scrollable).hitTestable();
+        if (scrollable.evaluate().isNotEmpty) {
+          await tester.fling(scrollable.first, const Offset(0, -3000), 3000);
+          await tester.pumpAndSettle();
+        }
+        expect(tester.takeException(), isNull, reason: 'tab $tab');
+      }
+
+      // Day detail with the long entry.
+      await tester.tap(find.descendant(of: find.byType(AppBottomNav), matching: find.byType(InkWell)).at(0));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(lang == 'en' ? 'Edit today' : 'Bugünü düzenle'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

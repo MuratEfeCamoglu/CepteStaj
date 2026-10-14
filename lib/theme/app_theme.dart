@@ -24,7 +24,18 @@ class AppTheme {
         secondary: AppColors.coral,
         surface: AppColors.cardBg,
         onSurface: AppColors.textPrimary,
-        error: const Color(0xFFD64545),
+        error: AppColors.danger,
+        onSecondary: AppColors.onCoral,
+        // Stock widgets (menus, pickers, chips) pull these container tones
+        // — without them the dark theme shows Material's purple-grey tints.
+        surfaceContainerLowest: AppColors.screenBg,
+        surfaceContainerLow: AppColors.cardBg,
+        surfaceContainer: AppColors.cardBg,
+        surfaceContainerHigh: AppColors.cardBg,
+        surfaceContainerHighest: AppColors.sunkenBg,
+        onSurfaceVariant: AppColors.textMuted,
+        outline: AppColors.borderLight,
+        outlineVariant: AppColors.border,
       ),
       fontFamily: 'Inter',
     );
@@ -101,7 +112,7 @@ class AppTheme {
         enabledBorder: OutlineInputBorder(borderRadius: fieldRadius, borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
           borderRadius: fieldRadius,
-          borderSide: const BorderSide(color: AppColors.ink, width: 1.6),
+          borderSide: BorderSide(color: AppColors.ink, width: 1.6),
         ),
       ),
       textSelectionTheme: TextSelectionThemeData(
@@ -150,11 +161,11 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.isDark ? const Color(0xFFEEF2F3) : const Color(0xFF13191C),
+        backgroundColor: AppColors.isDark ? const Color(0xFF2A353C) : const Color(0xFF12181B),
         contentTextStyle: AppTextStyles.body(
           fontSize: 14,
           weight: FontWeight.w500,
-          color: AppColors.isDark ? const Color(0xFF13191C) : const Color(0xFFEEF2F3),
+          color: const Color(0xFFECF1F3),
         ),
         actionTextColor: AppColors.highlighter,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
@@ -169,6 +180,26 @@ class AppTheme {
       listTileTheme: ListTileThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
         iconColor: AppColors.textMuted,
+      ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: AppColors.cardBg,
+        dialBackgroundColor: AppColors.sunkenBg,
+        hourMinuteColor: AppColors.sunkenBg,
+        dayPeriodColor: AppColors.inkLight,
+      ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: AppColors.cardBg,
+        surfaceTintColor: Colors.transparent,
+        headerBackgroundColor: AppColors.ink,
+        headerForegroundColor: AppColors.onInk,
+      ),
+      popupMenuTheme: PopupMenuThemeData(color: AppColors.cardBg, surfaceTintColor: Colors.transparent),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: AppColors.isDark ? const Color(0xFF2A353C) : const Color(0xFF12181B),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle: AppTextStyles.body(fontSize: 12, color: const Color(0xFFECF1F3)),
       ),
       pageTransitionsTheme: const PageTransitionsTheme(builders: {
         TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),

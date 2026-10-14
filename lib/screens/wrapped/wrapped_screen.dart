@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/i18n.dart';
 import '../../core/tr_text.dart';
 import '../../data/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -38,37 +39,36 @@ class _WrappedScreenState extends State<WrappedScreen> {
 
   List<_WrappedSlide> _slides(AppState state) => [
     _WrappedSlide(
-      eyebrow: 'Bu staj boyunca',
+      eyebrow: t('Bu staj boyunca'),
       stat: state.totalWordsWritten.toString(),
-      unit: 'kelime yazdın',
-      caption: 'defterine, her gün biraz daha',
+      unit: t('kelime yazdın'),
+      caption: t('defterine, her gün biraz daha'),
     ),
     _WrappedSlide(
-      eyebrow: 'Toplam',
+      eyebrow: t('Toplam'),
       stat: '${state.filledWorkdays}',
-      unit: 'gün doldurdun',
-      caption:
-          '${state.totalWorkdays} iş gününün ${state.filledWorkdays} tanesi tamam',
+      unit: t('gün doldurdun'),
+      caption: t('{total} iş gününün {filled} tanesi tamam', {'total': state.totalWorkdays, 'filled': state.filledWorkdays}),
     ),
     _WrappedSlide(
-      eyebrow: 'Güncel seri',
+      eyebrow: t('Güncel seri'),
       stat: '${state.currentStreak}',
-      unit: 'gün üst üste',
-      caption: 'aralıksız defter tutma serisi',
+      unit: t('gün üst üste'),
+      caption: t('aralıksız defter tutma serisi'),
     ),
     if (state.quickCounters.isNotEmpty)
       _WrappedSlide(
-        eyebrow: 'Bu staj boyunca içtin',
+        eyebrow: t('Bu staj boyunca içtin'),
         stat:
             '${state.quickCounters.firstWhereOrNull((c) => c.emoji == '☕')?.count ?? state.quickCounters.first.count}',
-        unit: 'kahve',
-        caption: 'hızlı sayaçlardan toplandı',
+        unit: t('kahve'),
+        caption: t('hızlı sayaçlardan toplandı'),
       ),
     _WrappedSlide(
-      eyebrow: 'Kazandığın',
+      eyebrow: t('Kazandığın'),
       stat: '${state.badges.where((b) => b.earned).length}',
-      unit: 'rozet',
-      caption: 'günlüğünden takip edebilirsin',
+      unit: t('rozet'),
+      caption: t('günlüğünden takip edebilirsin'),
     ),
   ];
 
@@ -105,10 +105,11 @@ class _WrappedScreenState extends State<WrappedScreen> {
 
     // Each card gets its own deep tone, story-style; the change cross-fades.
     const tones = [
-      AppColors.ink,
-      Color(0xFF13191C),
-      AppColors.inkDark,
-      Color(0xFF1D3B47),
+      Color(0xFF0B7A6D),
+      Color(0xFF3B2A7A),
+      Color(0xFF075A50),
+      Color(0xFF7A2E3B),
+      Color(0xFF123F57),
     ];
     return AnimatedContainer(
       duration: AppMotion.of(context, AppMotion.slow),
@@ -147,7 +148,7 @@ class _WrappedScreenState extends State<WrappedScreen> {
                                   ),
                                   curve: AppMotion.emphasized,
                                   child: const ColoredBox(
-                                    color: AppColors.onInk,
+                                    color: AppColors.onDeep,
                                   ),
                                 ),
                               ),
@@ -189,7 +190,8 @@ class _WrappedScreenState extends State<WrappedScreen> {
                 top: 8,
                 left: 8,
                 child: IconButton(
-                  icon: const Icon(Icons.ios_share, color: AppColors.onInk),
+                  tooltip: t('Paylaş'),
+                  icon: const Icon(Icons.ios_share, color: AppColors.onDeep),
                   onPressed: () => _share(state, slides),
                 ),
               ),
@@ -197,7 +199,8 @@ class _WrappedScreenState extends State<WrappedScreen> {
                 top: 8,
                 right: 8,
                 child: IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.onInk),
+                  tooltip: t('Kapat'),
+                  icon: const Icon(Icons.close, color: AppColors.onDeep),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
@@ -210,7 +213,7 @@ class _WrappedScreenState extends State<WrappedScreen> {
 
   void _share(AppState state, List<_WrappedSlide> slides) {
     final lines = [
-      'Cepte Staj Wrapped — ${state.internship?.name ?? ''}',
+      'Cepte Staj Wrapped — ${tStored(state.internship?.name ?? '')}',
       for (final s in slides) '${s.stat} ${s.unit}',
     ];
     SharePlus.instance.share(ShareParams(text: lines.join('\n')));
@@ -250,7 +253,7 @@ class _SlideView extends StatelessWidget {
               slide.eyebrow.toUpperTr(),
               textAlign: TextAlign.center,
               style: AppTextStyles.label(
-                color: AppColors.onInk.withValues(alpha: 0.7),
+                color: AppColors.onDeep.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -265,7 +268,7 @@ class _SlideView extends StatelessWidget {
               style: AppTextStyles.disp(
                 fontSize: 26,
                 weight: FontWeight.w700,
-                color: AppColors.onInk,
+                color: AppColors.onDeep,
               ),
             ),
           ),
@@ -277,7 +280,7 @@ class _SlideView extends StatelessWidget {
               textAlign: TextAlign.center,
               style: AppTextStyles.body(
                 fontSize: 14,
-                color: AppColors.onInk.withValues(alpha: 0.65),
+                color: AppColors.onDeep.withValues(alpha: 0.65),
               ),
             ),
           ),

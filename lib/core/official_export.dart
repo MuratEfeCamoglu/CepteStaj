@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/models.dart';
+import 'i18n.dart';
 
 /// Plain-text and Word (.docx) versions of the Resmi Defter, plus the
 /// "download" / "share" / "send to WhatsApp" plumbing shared with the PDF.
@@ -28,10 +29,10 @@ class OfficialExport {
   /// One day as a message. `*bold*` renders as bold in WhatsApp and stays
   /// readable as plain text everywhere else.
   static String dayText(DayEntry e) {
-    final out = StringBuffer('*Staj Defteri — ${formatDate(e.date)}*');
-    if (e.topic.trim().isNotEmpty) out.write('\n*Konu:* ${e.topic.trim()}');
+    final out = StringBuffer('*${t('Staj Defteri — {date}', {'date': formatDate(e.date)})}*');
+    if (e.topic.trim().isNotEmpty) out.write('\n*${t('Konu:')}* ${e.topic.trim()}');
     if (e.body.trim().isNotEmpty) out.write('\n\n${e.body.trim()}');
-    if (e.learned.trim().isNotEmpty) out.write('\n\n*Öğrendiklerim:* ${e.learned.trim()}');
+    if (e.learned.trim().isNotEmpty) out.write('\n\n*${t('Öğrendiklerim:')}* ${e.learned.trim()}');
     final hours = _hours(e);
     if (hours != null) out.write('\n\n$hours');
     return out.toString();
@@ -66,11 +67,11 @@ class OfficialExport {
       for (final line in const LineSplitter().convert(e.body.trim())) {
         body.write(_p(line, size: 22));
       }
-      if (e.learned.trim().isNotEmpty) body.write(_p('Öğrendiklerim: ${e.learned.trim()}', size: 22, before: 80));
+      if (e.learned.trim().isNotEmpty) body.write(_p('${t('Öğrendiklerim:')} ${e.learned.trim()}', size: 22, before: 80));
       final hours = _hours(e);
       if (hours != null) body.write(_p(hours, size: 18, color: '666666'));
     }
-    if (sorted.isEmpty) body.write(_p('Henüz doldurulmuş bir defter kaydı yok.', size: 22));
+    if (sorted.isEmpty) body.write(_p(t('Henüz doldurulmuş bir defter kaydı yok.'), size: 22));
 
     final document = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
@@ -168,6 +169,6 @@ class OfficialExport {
     final inT = e.checkIn.trim();
     final outT = e.checkOut.trim();
     if (inT.isEmpty && outT.isEmpty) return null;
-    return [if (inT.isNotEmpty) 'Giriş: $inT', if (outT.isNotEmpty) 'Çıkış: $outT'].join(' · ');
+    return [if (inT.isNotEmpty) '${t('Giriş')}: $inT', if (outT.isNotEmpty) '${t('Çıkış')}: $outT'].join(' · ');
   }
 }

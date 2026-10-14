@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../data/app_state.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../theme/app_colors.dart';
@@ -47,8 +48,10 @@ class _SplashScreenState extends State<SplashScreen> {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 380),
-        pageBuilder: (_, __, ___) => state.hasInternship ? const AppShell() : const OnboardingScreen(),
-        transitionsBuilder: (_, animation, __, child) => FadeTransition(opacity: animation, child: child),
+        pageBuilder: (_, __, ___) =>
+            state.hasInternship ? const AppShell() : const OnboardingScreen(),
+        transitionsBuilder: (_, animation, __, child) =>
+            FadeTransition(opacity: animation, child: child),
       ),
     );
   }
@@ -74,26 +77,42 @@ class _SplashScreenState extends State<SplashScreen> {
                     children: [
                       Entrance(
                         offsetY: 18,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text('Cepte', style: AppTextStyles.disp(fontSize: 44)),
-                            const SizedBox(width: 4),
-                            HighlighterMark(
-                              delay: const Duration(milliseconds: 280),
-                              child: Text('Staj', style: AppTextStyles.disp(fontSize: 44, color: AppColors.isDark ? AppColors.highlighter : AppColors.ink)),
-                            ),
-                          ],
+                        child: FittedBox(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                'Cepte',
+                                style: AppTextStyles.disp(fontSize: 44),
+                              ),
+                              const SizedBox(width: 4),
+                              HighlighterMark(
+                                delay: const Duration(milliseconds: 280),
+                                child: Text(
+                                  'Staj',
+                                  style: AppTextStyles.disp(
+                                    fontSize: 44,
+                                    color: AppColors.isDark
+                                        ? AppColors.highlighter
+                                        : AppColors.ink,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 10),
                       Entrance(
                         index: 3,
                         child: Text(
-                          'Staj defterin, cebinde.',
-                          style: AppTextStyles.body(fontSize: 15, color: AppColors.textMuted),
+                          t('Staj defterin, cebinde.'),
+                          style: AppTextStyles.body(
+                            fontSize: 15,
+                            color: AppColors.textMuted,
+                          ),
                         ),
                       ),
                     ],

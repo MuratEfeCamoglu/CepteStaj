@@ -5,8 +5,8 @@
 <h1 align="center">Cepte Staj</h1>
 
 <p align="center">
-  Staj defterini elle yazmak zorunda olan öğrenciler için: gün içinde hızlıca not al,
-  akşam kağıda geçir, stajını da hatırlanır bir deneyime dönüştür.
+  Staj defteri tutan öğrenciler için: gün içinde hızlıca not al, defterini dakikalar
+  içinde tamamla, stajını da hatırlanır bir deneyime dönüştür. Türkçe ve İngilizce.
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@ yoktur; tüm veriler yalnızca telefonda saklanır.
 
 | | **Resmi Defter** | **Staj Günlüğüm** (kişisel) |
 |---|---|---|
-| Ne için | Kağıda geçirilecek, amire imzalatılacak metin | Yalnızca senin için, stajın anısı |
+| Ne için | Amire imzalatılacak, dışa aktarılan defter metni | Yalnızca senin için, stajın anısı |
 | İçerik | Gün konusu, yapılan işler, giriş/çıkış saati, öğrendiklerin | Ruh hali, Günün Olayı, küçük zafer, şarkı, mentor sözleri, rozetler |
 | PDF'e girer mi | Evet | **Hayır, asla** |
 
@@ -35,11 +35,16 @@ yalnızca resmi alanları (`topic`, `body`, `learned`, `checkIn`/`checkOut`) ve
 ## Ekranlar
 
 ### Bugün
-Kalan iş günü halkası, doldurulan gün oranı, boş kalan günler için uyarı, seri takibi ve
-tek dokunuşla artan hızlı sayaçlar (☕ kahve, 🐛 çözülen hata, 🙋 sorulan soru).
+Günün saatine göre karşılama, kalan iş günü halkası ve tahmini bitiş tarihi, bugünün
+defter durumu ve kelime hedefi, seri / toplam kelime / ruh hali / rozet kutuları, bu haftanın
+gün şeridi, tek dokunuşla açılan eksik günler, son kayıtlar, tek dokunuşla artan hızlı
+sayaçlar (☕ kahve, 🐛 çözülen hata, 🙋 sorulan soru) ve günün ipucu.
 
 ### Takvim
-Aylık görünümde her günün durumu bir bakışta görülür: dolu, eksik, tatil ve kağıda yazıldı ✓.
+Aylık görünümde her günün durumu bir bakışta görülür: dolu, eksik, tatil, stajın başlangıç ve
+bitiş günü. Ay değiştirmek için yana kaydırılır; **Ruh hali** görünümü günleri o günkü
+ruh haline göre renklendirir. Bir güne dokununca altta özeti (konu, kelime, saatler,
+fotoğraf) açılır, ikinci dokunuş günü açar. Altta aylık özet ve o ayın resmi tatilleri yer alır.
 Resmi tatiller ve hafta sonları iş günü sayımına otomatik olarak dahil edilmez.
 
 <p align="center">
@@ -55,14 +60,8 @@ metnin kağıtta **kaç satır** tutacağını gösterir. Yazdıkların otomatik
 **Fotoğraf** sekmesinde galeriden ya da kameradan fotoğraf eklenir, açıklama yazılır ve
 istenirse fotoğraf deftere (PDF'e) dahil edilmek üzere işaretlenir.
 
-### Kağıda Geçirme Modu
-Defter kaydını kağıda geçirirken kullanılan tam ekran mod: büyük punto, defter çizgileri,
-kalan satır sayısı ve ayarlanabilir yazı boyutu.
-
 <p align="center">
   <img src="docs/screenshots/defter.png" width="260" alt="Defter">
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/kagida-gecir.png" width="260" alt="Kağıda Geçirme Modu">
 </p>
 
 ### Günlüğüm (kişisel)
@@ -137,11 +136,11 @@ flutter build apk --release  # APK: build/app/outputs/flutter-apk/
 ```
 lib/
   main.dart              uygulama girişi, tema ve Provider kurulumu
-  core/                  iş günü hesabı, tatiller, rozetler, PDF, yedek, bildirim, PIN
+  core/                  iş günü hesabı, tatiller, rozetler, PDF, yedek, bildirim, PIN, dil (i18n)
   data/app_state.dart    uygulamanın tüm durumu (tek ChangeNotifier)
   models/models.dart     veri modelleri (JSON serileştirme dahil)
   features/onboarding/   onboarding akışı
-  screens/               bugün, takvim, gün detayı, kağıda geçir, günlüğüm, wrapped, ayarlar
+  screens/               bugün, takvim, gün detayı, günlüğüm, wrapped, ayarlar
   theme/                 renk, yazı ve boşluk token'ları
   widgets/               ortak bileşenler
 test/                    WorkdayCalculator, PDF export ve widget testleri
@@ -149,7 +148,9 @@ test/                    WorkdayCalculator, PDF export ve widget testleri
 
 ## Gizlilik
 
-Tüm veriler yalnızca cihazda saklanır, hiçbir sunucuya gönderilmez. Kişisel katman
+Tüm veriler yalnızca cihazda saklanır, hiçbir sunucuya gönderilmez. Tek istisna: Spotify'dan
+bir şarkı paylaşıldığında, adını öğrenmek için yalnızca o şarkının bağlantısı Spotify'a sorulur
+(uygulamanın tek internet isteği, `lib/core/song_lookup.dart`). Kişisel katman
 (Günlüğüm) PDF dışa aktarımına asla dahil edilmez ve isteğe bağlı olarak ayrı bir PIN ile
 kilitlenebilir.
 

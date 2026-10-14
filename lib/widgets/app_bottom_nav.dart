@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/i18n.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_spacing.dart';
@@ -10,14 +11,17 @@ class NavTabSpec {
   final String label;
   final IconData icon;
   final IconData activeIcon;
-  final Color activeColor;
+  /// The private Günlüğüm tab — accented coral instead of ink.
+  final bool personal;
 
   const NavTabSpec({
     required this.label,
     required this.icon,
     required this.activeIcon,
-    this.activeColor = AppColors.ink,
+    this.personal = false,
   });
+
+  Color get activeColor => personal ? AppColors.coral : AppColors.ink;
 }
 
 /// Bottom tab bar shared by all main screens. The active tab swaps to a
@@ -25,13 +29,13 @@ class NavTabSpec {
 /// coral on the Günlüğüm tab to signal the "private side" of the app.
 class AppBottomNav extends StatelessWidget {
   static const tabs = [
-    NavTabSpec(label: 'Bugün', icon: Icons.check_box_outlined, activeIcon: Icons.check_box_rounded),
-    NavTabSpec(label: 'Takvim', icon: Icons.calendar_today_outlined, activeIcon: Icons.calendar_today_rounded),
+    NavTabSpec(label: 'Bugün', icon: Icons.wb_sunny_outlined, activeIcon: Icons.wb_sunny_rounded),
+    NavTabSpec(label: 'Takvim', icon: Icons.calendar_month_outlined, activeIcon: Icons.calendar_month_rounded),
     NavTabSpec(
       label: 'Günlüğüm',
       icon: Icons.auto_stories_outlined,
       activeIcon: Icons.auto_stories_rounded,
-      activeColor: AppColors.coral,
+      personal: true,
     ),
     NavTabSpec(label: 'Ayarlar', icon: Icons.settings_outlined, activeIcon: Icons.settings_rounded),
   ];
@@ -48,6 +52,13 @@ class AppBottomNav extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBg,
         border: Border(top: BorderSide(color: AppColors.border)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: AppColors.isDark ? 0.3 : 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: SafeArea(
         top: false,
@@ -77,27 +88,29 @@ class AppBottomNav extends StatelessWidget {
                               curve: AppMotion.emphasized,
                               padding: EdgeInsets.symmetric(horizontal: i == currentIndex ? 20 : 12, vertical: 5),
                               decoration: BoxDecoration(
-                                color: i == currentIndex ? tabs[i].activeColor.withValues(alpha: 0.14) : Colors.transparent,
+                                color: i == currentIndex ? AppColors.tint(tabs[i].activeColor) : Colors.transparent,
                                 borderRadius: BorderRadius.circular(AppRadius.pill),
                               ),
-                              child: AnimatedScale(
-                                scale: i == currentIndex ? 1.08 : 1,
+                              child: AnimatedSwitcher(
                                 duration: duration,
-                                curve: AppMotion.settle,
+                                switchInCurve: AppMotion.settle,
+                                transitionBuilder: (child, a) => ScaleTransition(scale: a, child: child),
                                 child: Icon(
                                   i == currentIndex ? tabs[i].activeIcon : tabs[i].icon,
+                                  key: ValueKey(i == currentIndex),
                                   size: 22,
                                   color: i == currentIndex ? tabs[i].activeColor : AppColors.textFaint,
                                 ),
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              tabs[i].label,
+                            AnimatedDefaultTextStyle(
+                              duration: duration,
                               style: AppTextStyles.tab(
                                 color: i == currentIndex ? tabs[i].activeColor : AppColors.textMuted,
-                                weight: i == currentIndex ? FontWeight.w600 : FontWeight.w500,
+                                weight: i == currentIndex ? FontWeight.w700 : FontWeight.w500,
                               ),
+                              child: Text(t(tabs[i].label)),
                             ),
                           ],
                         ),

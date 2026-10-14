@@ -1,7 +1,9 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/i18n.dart';
 import '../../data/app_state.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
@@ -82,6 +84,14 @@ class _JournalScreenState extends State<JournalScreen> {
             if (mounted) _syncControllers(state, selectedDate);
           });
         }
+        // A song shared in from Spotify lands in the entry while this tab's
+        // controller still holds the old text.
+        final song = state.entryFor(selectedDate).song;
+        if (_controllersFor == selectedDate && _songCtrl.text != song) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _songCtrl.text != song) _songCtrl.text = song;
+          });
+        }
         if (state.bingoHasLine && !_prevHasLine) {
           WidgetsBinding.instance.addPostFrameCallback((_) => _confetti.play());
         }
@@ -101,7 +111,14 @@ class _JournalScreenState extends State<JournalScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Günlüğüm', style: AppTextStyles.hand(fontSize: 44)),
+                          Flexible(
+                            child: Text(
+                              t('Günlüğüm'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.hand(fontSize: 44, color: AppColors.coral),
+                            ),
+                          ),
                           if (state.hasPinLock)
                             InkWell(
                               onTap: state.lockPersonalNow,
@@ -132,9 +149,9 @@ class _JournalScreenState extends State<JournalScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.lock_rounded, size: 12, color: AppColors.coral),
+                                Icon(Icons.lock_rounded, size: 12, color: AppColors.coral),
                                 const SizedBox(width: 6),
-                                Text('Deftere gitmez',
+                                Text(t('Deftere gitmez'),
                                     style: AppTextStyles.body(fontSize: 11, weight: FontWeight.w600, color: AppColors.coral)),
                               ],
                             ),
@@ -190,7 +207,7 @@ class _JournalScreenState extends State<JournalScreen> {
                   blastDirectionality: BlastDirectionality.explosive,
                   shouldLoop: false,
                   numberOfParticles: 24,
-                  colors: const [AppColors.coral, AppColors.ink, AppColors.checkGreen],
+                  colors: [AppColors.coral, AppColors.ink, AppColors.checkGreen, AppColors.highlighter, AppColors.violet],
                 ),
               ),
             ],
@@ -265,19 +282,19 @@ class _TodayCard extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                _isToday ? 'Bugün nasıldı?' : '${_shortDate(date)} nasıldı?',
+                _isToday ? t('Bugün nasıldı?') : t('{date} nasıldı?', {'date': compactDateFor(date)}),
                 style: AppTextStyles.hand(fontSize: 30),
               ),
             ),
             _DateStepButton(
               icon: Icons.chevron_left,
-              tooltip: 'Önceki gün',
+              tooltip: t('Önceki gün'),
               enabled: _canGoBack,
               onTap: () => onDateChanged(date.subtract(const Duration(days: 1))),
             ),
             _DateStepButton(
               icon: Icons.chevron_right,
-              tooltip: 'Sonraki gün',
+              tooltip: t('Sonraki gün'),
               enabled: _canGoForward,
               onTap: () => onDateChanged(date.add(const Duration(days: 1))),
             ),
@@ -302,7 +319,7 @@ class _TodayCard extends StatelessWidget {
           children: [
             for (final r in moodReasonOptions)
               _ReasonChip(
-                label: r,
+                label: t(r),
                 selected: entry.moodReasons.contains(r),
                 onTap: () => state.toggleMoodReason(date, r),
               ),
@@ -316,7 +333,7 @@ class _TodayCard extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: _WorkloadChip(
-                    label: l,
+                    label: t(l),
                     selected: entry.workload == v,
                     onTap: () => state.updateEntry(date, workload: entry.workload == v ? 0 : v),
                   ),
@@ -325,8 +342,8 @@ class _TodayCard extends StatelessWidget {
           ],
         ),
         const _SectionDivider(),
-        Text('Günün Olayı', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
-        Text('Bugün başına gelen en absürt, komik ya da trajik şey.',
+        Text(t('Günün Olayı'), style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
+        Text(t('Bugün başına gelen en absürt, komik ya da trajik şey.'),
             style: AppTextStyles.body(fontSize: 11, color: AppColors.textMuted)),
         const SizedBox(height: AppSpacing.sm),
         Wrap(
@@ -335,28 +352,44 @@ class _TodayCard extends StatelessWidget {
           children: [
             for (final c in incidentCategories)
               _ReasonChip(
-                label: '${c.$1} ${c.$2}',
+                label: '${c.$1} ${t(c.$2)}',
                 selected: entry.incidentCategory == c.$2,
                 onTap: () => state.updateEntry(date, incidentCategory: entry.incidentCategory == c.$2 ? '' : c.$2),
               ),
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        _MinimalField(controller: incidentCtrl, hint: 'Ne oldu?', onChanged: (v) => state.updateEntry(date, incident: v)),
+        _MinimalField(controller: incidentCtrl, hint: t('Ne oldu?'), onChanged: (v) => state.updateEntry(date, incident: v)),
         const _SectionDivider(),
-        Text('Günün küçük zaferi', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
+        Text(t('Günün küçük zaferi'), style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
         const SizedBox(height: AppSpacing.sm),
-        _MinimalField(controller: winCtrl, hint: 'Bugün iyi giden bir şey', onChanged: (v) => state.updateEntry(date, dailyWin: v)),
+        _MinimalField(controller: winCtrl, hint: t('Bugün iyi giden bir şey'), onChanged: (v) => state.updateEntry(date, dailyWin: v)),
         const _SectionDivider(),
-        Text('Bugünün şarkısı', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
+        Text(t('Bugünün şarkısı'), style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
         const SizedBox(height: AppSpacing.sm),
-        _MinimalField(controller: songCtrl, hint: '🎵 Şarkı - sanatçı', onChanged: (v) => state.updateEntry(date, song: v)),
+        AnimatedSwitcher(
+          duration: AppMotion.of(context, AppMotion.standard),
+          transitionBuilder: (c, a) => SizeTransition(sizeFactor: a, alignment: Alignment.topCenter, child: FadeTransition(opacity: a, child: c)),
+          child: entry.songUrl.isNotEmpty
+              ? Padding(
+                  key: ValueKey('${entry.song}|${entry.songUrl}|${state.songLookupPending}'),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: _NowPlayingCard(
+                    title: entry.song,
+                    url: entry.songUrl,
+                    loading: state.songLookupPending && entry.song.trim().isEmpty,
+                  ),
+                )
+              : const SizedBox.shrink(key: ValueKey('none')),
+        ),
+        _MinimalField(controller: songCtrl, hint: t('🎵 Şarkı - sanatçı'), onChanged: (v) => state.updateEntry(date, song: v)),
+        if (entry.songUrl.isEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _SpotifyRow(song: entry.song, url: entry.songUrl),
+        ],
       ],
     );
   }
-
-  static const _months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-  String _shortDate(DateTime d) => '${d.day} ${_months[d.month - 1]}';
 }
 
 class _DateStepButton extends StatelessWidget {
@@ -414,7 +447,7 @@ class _MinimalField extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(vertical: 8),
         border: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border)),
         enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border)),
-        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.coral)),
+        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.coral, width: 1.5)),
       ),
     );
   }
@@ -445,6 +478,9 @@ class _MoodButton extends StatelessWidget {
             color: selected ? AppColors.coralLight : AppColors.sunkenBg,
             shape: BoxShape.circle,
             border: Border.all(color: selected ? AppColors.coral : Colors.transparent, width: 2),
+            boxShadow: selected
+                ? [BoxShadow(color: AppColors.coral.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]
+                : null,
           ),
           child: Text(emoji, style: const TextStyle(fontSize: 22)),
         ),
@@ -477,7 +513,7 @@ class _ReasonChip extends StatelessWidget {
           style: AppTextStyles.body(
             fontSize: 12,
             weight: selected ? FontWeight.w600 : FontWeight.w500,
-            color: selected ? AppColors.onInk : AppColors.textMuted,
+            color: selected ? AppColors.onCoral : AppColors.textMuted,
           ),
         ),
       ),
@@ -510,7 +546,7 @@ class _WorkloadChip extends StatelessWidget {
           style: AppTextStyles.body(
             fontSize: 13,
             weight: FontWeight.w600,
-            color: selected ? AppColors.onInk : AppColors.textMuted,
+            color: selected ? AppColors.onCoral : AppColors.textMuted,
           ),
         ),
       ),
@@ -525,12 +561,12 @@ class _MoodHistoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final days = [
-      for (var offset = 6; offset >= 0; offset--) state.today.subtract(Duration(days: offset)),
+      for (var offset = 6; offset >= 0; offset--) DateTime(state.today.year, state.today.month, state.today.day - offset),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Son 7 gün', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
+        Text(t('Son 7 gün'), style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
         const SizedBox(height: AppSpacing.sm),
         SizedBox(
           height: 36,
@@ -574,16 +610,16 @@ void _confirmResetBingo(BuildContext context, AppState state) {
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Bingo kartını sıfırla'),
-      content: const Text('Tüm işaretler kaldırılacak. Devam edilsin mi?'),
+      title: Text(t('Bingo kartını sıfırla')),
+      content: Text(t('Tüm işaretler kaldırılacak. Devam edilsin mi?')),
       actions: [
-        TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Vazgeç')),
+        TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(t('Vazgeç'))),
         TextButton(
           onPressed: () {
             state.resetBingoCard();
             Navigator.of(ctx).pop();
           },
-          child: const Text('Sıfırla'),
+          child: Text(t('Sıfırla')),
         ),
       ],
     ),
@@ -621,15 +657,15 @@ class _BingoSheet extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Expanded(child: Text('Staj Bingo', style: AppTextStyles.head(fontSize: 17))),
+                    Expanded(child: Text(t('Staj Bingo'), style: AppTextStyles.head(fontSize: 17))),
                     TextButton(
                       onPressed: () => _confirmResetBingo(context, state),
-                      child: const Text('Sıfırla'),
+                      child: Text(t('Sıfırla')),
                     ),
                   ],
                 ),
                 Text(
-                  'Dokun: işaretle · Uzun bas: kareyi düzenle',
+                  t('Dokun: işaretle · Uzun bas: kareyi düzenle'),
                   style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -644,24 +680,24 @@ class _BingoSheet extends StatelessWidget {
                   childAspectRatio: 1,
                   physics: const NeverScrollableScrollPhysics(),
                   children: [
-                    for (final t in cells)
+                    for (final task in cells)
                       InkWell(
                         borderRadius: BorderRadius.circular(AppRadius.card),
-                        onTap: () => state.toggleBingo(t.id),
-                        onLongPress: () => _editBingoTask(context, state, t),
+                        onTap: () => state.toggleBingo(task.id),
+                        onLongPress: () => _editBingoTask(context, state, task),
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: t.done ? AppColors.coral : AppColors.coralLight,
+                            color: task.done ? AppColors.coral : AppColors.coralLight,
                             borderRadius: BorderRadius.circular(AppRadius.card),
                           ),
                           child: Text(
-                            t.done ? '✓ ${t.text}' : t.text,
+                            task.done ? '✓ ${tStored(task.text)}' : tStored(task.text),
                             textAlign: TextAlign.center,
                             maxLines: 5,
                             overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.body(fontSize: 11, color: t.done ? AppColors.onInk : AppColors.textPrimary),
+                            style: AppTextStyles.body(fontSize: 11, color: task.done ? AppColors.onCoral : AppColors.textPrimary),
                           ),
                         ),
                       ),
@@ -678,20 +714,20 @@ class _BingoSheet extends StatelessWidget {
   }
 
   void _editBingoTask(BuildContext context, AppState state, BingoTask task) {
-    final ctrl = TextEditingController(text: task.text);
+    final ctrl = TextEditingController(text: tStored(task.text));
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Kareyi düzenle'),
+        title: Text(t('Kareyi düzenle')),
         content: TextField(controller: ctrl, autofocus: true, maxLines: 3),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Vazgeç')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(t('Vazgeç'))),
           TextButton(
             onPressed: () {
               state.updateBingoTaskText(task.id, ctrl.text);
               Navigator.of(ctx).pop();
             },
-            child: const Text('Kaydet'),
+            child: Text(t('Kaydet')),
           ),
         ],
       ),
@@ -716,7 +752,14 @@ class _BingoCard extends StatelessWidget {
                 onTap: () => _showBingoSheet(context),
                 child: Row(
                   children: [
-                    Text('Bingo', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
+                    Flexible(
+                      child: Text(
+                        t('Bingo'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral),
+                      ),
+                    ),
                     const SizedBox(width: 4),
                     Icon(Icons.open_in_full, size: 12, color: AppColors.textFaint),
                   ],
@@ -740,14 +783,14 @@ class _BingoCard extends StatelessWidget {
             crossAxisSpacing: 4,
             physics: const NeverScrollableScrollPhysics(),
             children: [
-              for (final t in cells)
+              for (final task in cells)
                 Tooltip(
-                  message: t.text,
+                  message: tStored(task.text),
                   child: InkWell(
-                    onTap: () => state.toggleBingo(t.id),
+                    onTap: () => state.toggleBingo(task.id),
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: t.done ? AppColors.coral : AppColors.coralLight,
+                        color: task.done ? AppColors.coral : AppColors.coralLight,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -775,7 +818,7 @@ void _showBadgesSheet(BuildContext context) {
           shrinkWrap: true,
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
-            Text('Rozetler', style: AppTextStyles.head(fontSize: 17)),
+            Text(t('Rozetler'), style: AppTextStyles.head(fontSize: 17)),
             const SizedBox(height: AppSpacing.md),
             for (final b in state.badges)
               ListTile(
@@ -793,8 +836,8 @@ void _showBadgesSheet(BuildContext context) {
                 title: Text(b.label, style: AppTextStyles.body(fontSize: 14, weight: FontWeight.w600)),
                 subtitle: Text(
                   b.earned
-                      ? (b.earnedAt != null ? 'Kazanıldı · ${b.earnedAt!.day}.${b.earnedAt!.month}.${b.earnedAt!.year}' : 'Kazanıldı')
-                      : 'Henüz kazanılmadı',
+                      ? (b.earnedAt != null ? t('Kazanıldı · {date}', {'date': fullDateFor(b.earnedAt!)}) : t('Kazanıldı'))
+                      : t('Henüz kazanılmadı'),
                   style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted),
                 ),
               ),
@@ -818,7 +861,14 @@ class _BadgesCard extends StatelessWidget {
           onTap: () => _showBadgesSheet(context),
           child: Row(
             children: [
-              Text('Rozetler', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
+              Flexible(
+                child: Text(
+                  t('Rozetler'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral),
+                ),
+              ),
               const SizedBox(width: 4),
               Text(
                 '${state.badges.where((b) => b.earned).length}/${state.badges.length}',
@@ -837,7 +887,7 @@ class _BadgesCard extends StatelessWidget {
             children: [
               for (final b in state.badges)
                 Tooltip(
-                  message: '${b.label}${b.earned ? '' : ' (henüz kazanılmadı)'}',
+                  message: '${b.label}${b.earned ? '' : ' ${t('(henüz kazanılmadı)')}'}',
                   child: Container(
                     width: 32,
                     height: 32,
@@ -846,7 +896,7 @@ class _BadgesCard extends StatelessWidget {
                       color: b.earned ? AppColors.coral : AppColors.coralLight,
                       shape: BoxShape.circle,
                     ),
-                    child: Text(b.emoji, style: TextStyle(fontSize: 14, color: b.earned ? AppColors.onInk : AppColors.textFaint)),
+                    child: Opacity(opacity: b.earned ? 1 : 0.35, child: Text(b.emoji, style: const TextStyle(fontSize: 14))),
                   ),
                 ),
             ],
@@ -868,16 +918,16 @@ class _MentorCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: Text('Mentor sözlüğü', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral))),
+            Expanded(child: Text(t('Mentor sözlüğü'), style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral))),
             if (state.mentorQuotes.isNotEmpty)
               TextButton(
                 onPressed: () => _showAllQuotes(context),
-                child: Text('Tümü (${state.mentorQuotes.length})'),
+                child: Text(t('Tümü ({n})', {'n': state.mentorQuotes.length})),
               ),
             InkWell(
               onTap: () => _addQuote(context, state),
-              child: const Padding(
-                padding: EdgeInsets.all(4),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
                 child: Icon(Icons.add_circle_outline, size: 20, color: AppColors.coral),
               ),
             ),
@@ -885,7 +935,7 @@ class _MentorCard extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         if (state.mentorQuotes.isEmpty)
-          Text('Henüz söz eklenmedi.', style: AppTextStyles.body(fontSize: 13, color: AppColors.textMuted))
+          Text(t('Henüz söz eklenmedi.'), style: AppTextStyles.body(fontSize: 13, color: AppColors.textMuted))
         else
           for (final q in state.mentorQuotes.take(3))
             Padding(
@@ -913,7 +963,7 @@ class _MentorCard extends StatelessWidget {
             shrinkWrap: true,
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
-              Text('Mentor sözlüğü', style: AppTextStyles.head(fontSize: 17)),
+              Text(t('Mentor sözlüğü'), style: AppTextStyles.head(fontSize: 17)),
               const SizedBox(height: AppSpacing.sm),
               for (final q in state.mentorQuotes)
                 ListTile(
@@ -923,7 +973,7 @@ class _MentorCard extends StatelessWidget {
                       ? Text('— ${q.author}', style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted))
                       : null,
                   trailing: IconButton(
-                    tooltip: 'Sil',
+                    tooltip: t('Sil'),
                     icon: Icon(Icons.delete_outline, size: 20, color: AppColors.textMuted),
                     onPressed: () => state.removeMentorQuote(q.id),
                   ),
@@ -941,22 +991,23 @@ class _MentorCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Mentor sözü ekle'),
+        title: Text(t('Mentor sözü ekle')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: quoteCtrl, autofocus: true, decoration: const InputDecoration(hintText: 'Söz')),
-            TextField(controller: authorCtrl, decoration: const InputDecoration(hintText: 'Kim söyledi? (opsiyonel)')),
+            TextField(controller: quoteCtrl, autofocus: true, decoration: InputDecoration(hintText: t('Söz'))),
+            const SizedBox(height: 8),
+            TextField(controller: authorCtrl, decoration: InputDecoration(hintText: t('Kim söyledi? (opsiyonel)'))),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Vazgeç')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(t('Vazgeç'))),
           TextButton(
             onPressed: () {
               state.addMentorQuote(quoteCtrl.text, author: authorCtrl.text);
               Navigator.of(ctx).pop();
             },
-            child: const Text('Ekle'),
+            child: Text(t('Ekle')),
           ),
         ],
       ),
@@ -978,24 +1029,31 @@ class _CapsuleCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.hourglass_bottom, size: 16, color: AppColors.coral),
+            Icon(Icons.hourglass_bottom, size: 16, color: AppColors.coral),
             const SizedBox(width: 6),
-            Text('Zaman Kapsülü', style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral)),
+            Flexible(
+              child: Text(
+                t('Zaman Kapsülü'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.hand(fontSize: 24, color: AppColors.coral),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 8),
         if (i.capsuleOpened) ...[
-          Text('Beklenti: ${i.capsuleExpectation}', style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)),
-          Text('Korku: ${i.capsuleFear}', style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)),
+          Text(t('Beklenti: {v}', {'v': i.capsuleExpectation}), style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)),
+          Text(t('Korku: {v}', {'v': i.capsuleFear}), style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)),
           const SizedBox(height: 4),
-          Text('Gerçekte ne oldu: ${i.capsuleReflection}', style: AppTextStyles.body(fontSize: 13)),
+          Text(t('Gerçekte ne oldu: {v}', {'v': i.capsuleReflection}), style: AppTextStyles.body(fontSize: 13)),
         ] else if (canReveal)
           TextButton(
             onPressed: () => _openCapsule(context, state),
-            child: const Text('Zaman kapsülünü aç'),
+            child: Text(t('Zaman kapsülünü aç')),
           )
         else
-          Text('Staj başında bir beklenti ya da korku yazmadın.', style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)),
+          Text(t('Staj başında bir beklenti ya da korku yazmadın.'), style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)),
       ],
     );
   }
@@ -1006,32 +1064,175 @@ class _CapsuleCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Zaman Kapsülü'),
+        title: Text(t('Zaman Kapsülü')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Beklentin: ${i.capsuleExpectation}', style: AppTextStyles.body(fontSize: 13)),
-            Text('Korkun: ${i.capsuleFear}', style: AppTextStyles.body(fontSize: 13)),
+            Text(t('Beklentin: {v}', {'v': i.capsuleExpectation}), style: AppTextStyles.body(fontSize: 13)),
+            Text(t('Korkun: {v}', {'v': i.capsuleFear}), style: AppTextStyles.body(fontSize: 13)),
             const SizedBox(height: 12),
             TextField(
               controller: reflectionCtrl,
               maxLines: 3,
               autofocus: true,
-              decoration: const InputDecoration(hintText: 'Gerçekte ne oldu?'),
+              decoration: InputDecoration(hintText: t('Gerçekte ne oldu?')),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Vazgeç')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(t('Vazgeç'))),
           TextButton(
             onPressed: () {
               state.openCapsule(reflectionCtrl.text);
               Navigator.of(ctx).pop();
             },
-            child: const Text('Kaydet'),
+            child: Text(t('Kaydet')),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Opens the song in Spotify when it was shared in with a link; otherwise
+/// sends the user to Spotify (searching for what they typed) so they can
+/// share the track back with Share → Cepte Staj.
+class _SpotifyRow extends StatelessWidget {
+  final String song;
+  final String url;
+  const _SpotifyRow({required this.song, required this.url});
+
+  static const _spotifyGreen = Color(0xFF1DB954);
+
+  Future<void> _open(BuildContext context) {
+    final query = Uri.encodeComponent(song.trim());
+    return _openSpotify(
+      context,
+      url.isNotEmpty
+          ? [Uri.parse(url)]
+          : [
+              Uri.parse(song.trim().isEmpty ? 'spotify:' : 'spotify:search:$query'),
+              Uri.parse(song.trim().isEmpty ? 'https://open.spotify.com' : 'https://open.spotify.com/search/$query'),
+            ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasLink = url.isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Pressable(
+          onTap: () => _open(context),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(10, 7, 14, 7),
+            decoration: BoxDecoration(
+              color: _spotifyGreen.withValues(alpha: AppColors.isDark ? 0.2 : 0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(hasLink ? Icons.play_circle_fill_rounded : Icons.search_rounded, size: 18, color: _spotifyGreen),
+                const SizedBox(width: 6),
+                Text(
+                  hasLink ? t('Spotify\'da aç') : t('Spotify\'dan seç'),
+                  style: AppTextStyles.body(fontSize: 13, weight: FontWeight.w600, color: _spotifyGreen),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (!hasLink) ...[
+          const SizedBox(height: 6),
+          Text(
+            t('Spotify\'da şarkıda Paylaş → Cepte Staj\'a dokun, buraya gelsin.'),
+            style: AppTextStyles.body(fontSize: 11, color: AppColors.textMuted),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+Future<void> _openSpotify(BuildContext context, List<Uri> candidates) async {
+  final messenger = ScaffoldMessenger.of(context);
+  for (final uri in candidates) {
+    try {
+      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
+    } catch (_) {}
+  }
+  messenger.showSnackBar(SnackBar(content: Text(t('Spotify açılamadı'))));
+}
+
+/// The shared song, shown big at the top of the "Bugünün şarkısı" section:
+/// its name (looked up from the link) and a play button into Spotify.
+class _NowPlayingCard extends StatelessWidget {
+  final String title;
+  final String url;
+  final bool loading;
+  const _NowPlayingCard({required this.title, required this.url, required this.loading});
+
+  @override
+  Widget build(BuildContext context) {
+    const green = Color(0xFF1DB954);
+    final name = title.trim().isNotEmpty
+        ? title.trim()
+        : loading
+            ? t('Şarkı adı alınıyor…')
+            : t('Adı bulunamadı — aşağıya yazabilirsin');
+    return Pressable(
+      onTap: () => _openSpotify(context, [Uri.parse(url)]),
+      pressedScale: 0.98,
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF1ED760), Color(0xFF128A3E)],
+          ),
+          boxShadow: [BoxShadow(color: green.withValues(alpha: 0.3), blurRadius: 14, offset: const Offset(0, 6))],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(10)),
+              child: loading
+                  ? const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                    )
+                  : const Icon(Icons.music_note_rounded, color: Colors.white),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.body(fontSize: 15, weight: FontWeight.w700, color: Colors.white),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    t('Spotify\'da aç'),
+                    style: AppTextStyles.body(fontSize: 12, weight: FontWeight.w500, color: Colors.white.withValues(alpha: 0.85)),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.play_circle_fill_rounded, size: 34, color: Colors.white),
+          ],
+        ),
       ),
     );
   }

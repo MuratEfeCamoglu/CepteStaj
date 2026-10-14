@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'package:provider/provider.dart';
+
+import '../../core/i18n.dart';
+import '../../core/share_receiver.dart';
+import '../../core/song_lookup.dart';
+import '../../data/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_motion.dart';
 import '../../widgets/app_bottom_nav.dart';
@@ -42,6 +48,46 @@ class _AppShellState extends State<AppShell> {
   ];
 
   void goTo(int i) => setState(() => _index = i);
+
+  @override
+  void initState() {
+    super.initState();
+    ShareReceiver.listen(_onSongShared);
+  }
+
+  /// Spotify → Share → Cepte Staj: today's song, then show it in Günlüğüm.
+  Future<void> _onSongShared(SharedSong song) async {
+    if (!mounted) return;
+    final state = context.read<AppState>();
+    if (!state.hasInternship) return;
+    final messenger = ScaffoldMessenger.of(context);
+    if (!song.isMusic) {
+      messenger.showSnackBar(SnackBar(content: Text(t('Buraya yalnızca Spotify şarkı bağlantısı paylaşılabilir'))));
+      return;
+    }
+    final day = state.today;
+    state.setSharedSong(day, title: song.title, url: song.url);
+    goTo(2);
+
+    // Spotify usually shares just the link — ask Spotify for the name.
+    var title = song.title;
+    if (song.url != null) {
+      state.setSongLookupPending(true);
+      final looked = await SongLookup.titleFor(song.url!);
+      if (looked != null) {
+        title = looked;
+        state.setSharedSong(day, title: looked, url: song.url);
+      }
+      state.setSongLookupPending(false);
+    }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(title.trim().isNotEmpty
+            ? t('🎵 Bugünün şarkısı: {title}', {'title': title})
+            : t('🎵 Bağlantı kaydedildi — şarkının adını yazmayı unutma')),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

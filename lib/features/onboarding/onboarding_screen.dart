@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/notification_service.dart';
 import '../../core/workday_calculator.dart';
 import '../../data/app_state.dart';
@@ -13,6 +14,7 @@ import '../../widgets/lined_paper_background.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/primary_button.dart';
 import '../../widgets/responsive_content.dart';
+import '../../screens/day_detail/day_detail_screen.dart' show FieldChips;
 import '../../screens/shell/app_shell.dart';
 
 /// 5-step first-run setup: welcome/privacy, internship info, work days +
@@ -31,12 +33,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   late final PageController _controller;
   late int _step;
 
-  final nameCtrl = TextEditingController(text: 'Yazılım Stajı');
+  final nameCtrl = TextEditingController(text: t('Stajım'));
   final companyCtrl = TextEditingController();
   DateTime startDate = WorkdayCalculator.dateOnly(DateTime.now());
   int totalWorkdays = 20;
   List<bool> workDaysMask = [true, true, true, true, true, false, false];
   bool excludeHolidays = true;
+  String field = 'general';
   int dailyWordGoal = 120;
   bool reminderEnabled = true;
   TimeOfDay reminderTime = const TimeOfDay(hour: 20, minute: 0);
@@ -62,6 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       totalWorkdays = existing.totalWorkdays;
       workDaysMask = [...existing.workDaysMask];
       excludeHolidays = existing.excludeHolidays;
+      field = existing.field;
       dailyWordGoal = existing.dailyWordGoal;
       reminderEnabled = existing.reminderEnabled;
       reminderTime = TimeOfDay(hour: existing.reminderHour, minute: existing.reminderMinute);
@@ -88,13 +92,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _next() {
     if (_step == 2 && !workDaysMask.contains(true)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('En az bir çalışma günü seçmelisin')),
+        SnackBar(content: Text(t('En az bir çalışma günü seçmelisin'))),
       );
       return;
     }
     if (_step < _lastStep) {
       setState(() => _step++);
-      _controller.nextPage(duration: const Duration(milliseconds: 220), curve: Curves.easeOut);
+      _controller.nextPage(duration: AppMotion.of(context, AppMotion.standard), curve: AppMotion.emphasized);
     } else {
       _finish();
     }
@@ -106,7 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return;
     }
     setState(() => _step--);
-    _controller.previousPage(duration: const Duration(milliseconds: 220), curve: Curves.easeOut);
+    _controller.previousPage(duration: AppMotion.of(context, AppMotion.standard), curve: AppMotion.emphasized);
   }
 
   Future<void> _finish() async {
@@ -114,12 +118,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final wasSet = state.hasInternship;
     if (wasSet) {
       state.updateInternship((i) {
-        i.name = nameCtrl.text.trim().isEmpty ? 'Stajım' : nameCtrl.text.trim();
+        i.name = nameCtrl.text.trim().isEmpty ? t('Stajım') : nameCtrl.text.trim();
         i.company = companyCtrl.text.trim();
         i.startDate = startDate;
         i.totalWorkdays = totalWorkdays;
         i.workDaysMask = workDaysMask;
         i.excludeHolidays = excludeHolidays;
+        i.field = field;
         i.dailyWordGoal = dailyWordGoal;
         i.reminderEnabled = reminderEnabled;
         i.reminderHour = reminderTime.hour;
@@ -127,12 +132,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       });
     } else {
       state.setupInternship(Internship(
-        name: nameCtrl.text.trim().isEmpty ? 'Stajım' : nameCtrl.text.trim(),
+        name: nameCtrl.text.trim().isEmpty ? t('Stajım') : nameCtrl.text.trim(),
         company: companyCtrl.text.trim(),
         startDate: startDate,
         totalWorkdays: totalWorkdays,
         workDaysMask: workDaysMask,
         excludeHolidays: excludeHolidays,
+        field: field,
         dailyWordGoal: dailyWordGoal,
         reminderEnabled: reminderEnabled,
         reminderHour: reminderTime.hour,
@@ -180,7 +186,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               widthFactor: i <= _step ? 1 : 0,
                               duration: AppMotion.of(context, AppMotion.slow),
                               curve: AppMotion.emphasized,
-                              child: const ColoredBox(color: AppColors.ink),
+                              child: ColoredBox(color: AppColors.ink),
                             ),
                           ),
                         ),
@@ -194,12 +200,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 controller: _controller,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  _WelcomeStep(),
+                  _WelcomeStep(
+                    onLanguageChanged: (lang) {
+                      final wasDefaultName = nameCtrl.text == t('Stajım');
+                      context.read<AppState>().setLanguage(lang);
+                      if (wasDefaultName) nameCtrl.text = t('Stajım');
+                    },
+                  ),
                   _InternshipInfoStep(nameCtrl: nameCtrl, companyCtrl: companyCtrl, startDate: startDate,
                       earliestDate: startDate.isBefore(DateTime.now().subtract(const Duration(days: 365)))
                           ? startDate
                           : DateTime.now().subtract(const Duration(days: 365)),
                       totalWorkdays: totalWorkdays,
+                      field: field,
+                      onField: (f) => setState(() => field = f),
                       onStartDate: (d) => setState(() => startDate = d),
                       onTotalWorkdays: (v) => setState(() => totalWorkdays = v)),
                   _WorkDaysStep(
@@ -228,12 +242,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   children: [
                     TextButton(
                       onPressed: _back,
-                      child: Text('Geri', style: AppTextStyles.body(fontSize: 14, color: AppColors.textMuted)),
+                      child: Text(t('Geri'), style: AppTextStyles.body(fontSize: 14, color: AppColors.textMuted)),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: PrimaryButton(
-                        label: _step == _lastStep ? (_editing ? 'Kaydet' : 'Başla') : 'Devam et',
+                        label: _step == _lastStep ? (_editing ? t('Kaydet') : t('Başla')) : t('Devam et'),
                         onTap: _next,
                       ),
                     ),
@@ -288,25 +302,39 @@ class _StepScaffold extends StatelessWidget {
 }
 
 class _WelcomeStep extends StatelessWidget {
+  final ValueChanged<String> onLanguageChanged;
+  const _WelcomeStep({required this.onLanguageChanged});
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         const LinedPaperBackground(lineHeight: 40, opacity: 0.05),
         _StepScaffold(
-          title: 'Cepte Staj\'a hoş geldin',
-          subtitle: 'Gün içinde hızlıca not al, akşam kağıda geçir. Staj bir ödev değil, hatırlanır bir deneyim.',
+          title: t('Cepte Staj\'a hoş geldin'),
+          subtitle: t('Gün içinde hızlıca not al, defterini dakikalar içinde tamamla. Staj bir ödev değil, hatırlanır bir deneyim.'),
           children: [
+            _LanguageToggle(onChanged: onLanguageChanged),
+            const SizedBox(height: AppSpacing.lg),
             _InfoCard(
               icon: Icons.lock_outline,
-              title: 'Verilerin sadece telefonunda',
-              body: 'Hiçbir sunucuya gönderilmez. Gizli şirket bilgisi yazmamaya özen göster.',
+              color: AppColors.ink,
+              title: t('Verilerin sadece telefonunda'),
+              body: t('Yazdıkların hiçbir sunucuya gönderilmez. Gizli şirket bilgisi yazmamaya özen göster.'),
             ),
             const SizedBox(height: AppSpacing.md),
             _InfoCard(
               icon: Icons.layers_outlined,
-              title: 'İki katman, tek uygulama',
-              body: 'Resmi Defter dışa aktarılır. Günlüğüm (kişisel) hiçbir zaman dışa aktarma akışına girmez.',
+              color: AppColors.coral,
+              title: t('İki katman, tek uygulama'),
+              body: t('Resmi Defter dışa aktarılır. Günlüğüm (kişisel) hiçbir zaman dışa aktarma akışına girmez.'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _InfoCard(
+              icon: Icons.emoji_events_outlined,
+              color: AppColors.violet,
+              title: t('Rozetler, bingo, Wrapped'),
+              body: t('Stajın sonunda paylaşılabilir bir özetin olacak.'),
             ),
           ],
         ),
@@ -315,11 +343,52 @@ class _WelcomeStep extends StatelessWidget {
   }
 }
 
+/// TR / EN switch on the very first screen, so an English speaker isn't
+/// stuck reading five Turkish steps before reaching Ayarlar.
+class _LanguageToggle extends StatelessWidget {
+  final ValueChanged<String> onChanged;
+  const _LanguageToggle({required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.translate_rounded, size: 18, color: AppColors.textMuted),
+        const SizedBox(width: AppSpacing.sm),
+        for (final (code, label) in const [('tr', 'Türkçe'), ('en', 'English')])
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            child: Pressable(
+              onTap: () => onChanged(code),
+              child: AnimatedContainer(
+                duration: AppMotion.of(context, AppMotion.standard),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: L10n.lang == code ? AppColors.ink : AppColors.sunkenBg,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  label,
+                  style: AppTextStyles.body(
+                    fontSize: 13,
+                    weight: FontWeight.w600,
+                    color: L10n.lang == code ? AppColors.onInk : AppColors.textMuted,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _InfoCard extends StatelessWidget {
   final IconData icon;
+  final Color color;
   final String title;
   final String body;
-  const _InfoCard({required this.icon, required this.title, required this.body});
+  const _InfoCard({required this.icon, required this.color, required this.title, required this.body});
 
   @override
   Widget build(BuildContext context) {
@@ -337,8 +406,8 @@ class _InfoCard extends StatelessWidget {
             width: 40,
             height: 40,
             alignment: Alignment.center,
-            decoration: BoxDecoration(color: AppColors.inkLight, borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, size: 20, color: AppColors.ink),
+            decoration: BoxDecoration(color: AppColors.tint(color), borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, size: 20, color: color),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -363,6 +432,8 @@ class _InternshipInfoStep extends StatelessWidget {
   final DateTime startDate;
   final DateTime earliestDate;
   final int totalWorkdays;
+  final String field;
+  final ValueChanged<String> onField;
   final ValueChanged<DateTime> onStartDate;
   final ValueChanged<int> onTotalWorkdays;
 
@@ -372,6 +443,8 @@ class _InternshipInfoStep extends StatelessWidget {
     required this.startDate,
     required this.earliestDate,
     required this.totalWorkdays,
+    required this.field,
+    required this.onField,
     required this.onStartDate,
     required this.onTotalWorkdays,
   });
@@ -379,16 +452,19 @@ class _InternshipInfoStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _StepScaffold(
-      title: 'Staj bilgileri',
-      subtitle: 'Süre ve başlangıç tarihi, bitiş tarihini otomatik hesaplar.',
+      title: t('Staj bilgileri'),
+      subtitle: t('Süre ve başlangıç tarihi, bitiş tarihini otomatik hesaplar.'),
       children: [
-        _FieldLabel('Staj / bölüm adı'),
-        _TextInput(controller: nameCtrl, hint: 'örn. Yazılım Stajı'),
+        _FieldLabel(t('Staj alanın')),
+        FieldChips(selected: field, onSelected: onField),
         const SizedBox(height: AppSpacing.lg),
-        _FieldLabel('Şirket (opsiyonel)'),
-        _TextInput(controller: companyCtrl, hint: 'örn. Acme A.Ş.'),
+        _FieldLabel(t('Staj / bölüm adı')),
+        _TextInput(controller: nameCtrl, hint: t('örn. Hemşirelik Stajı')),
         const SizedBox(height: AppSpacing.lg),
-        _FieldLabel('Başlangıç tarihi'),
+        _FieldLabel(t('Şirket (opsiyonel)')),
+        _TextInput(controller: companyCtrl, hint: t('örn. Acme A.Ş.')),
+        const SizedBox(height: AppSpacing.lg),
+        _FieldLabel(t('Başlangıç tarihi')),
         _DatePickerTile(
           date: startDate,
           onTap: () async {
@@ -402,13 +478,13 @@ class _InternshipInfoStep extends StatelessWidget {
           },
         ),
         const SizedBox(height: AppSpacing.lg),
-        _FieldLabel('Staj süresi (iş günü)'),
+        _FieldLabel(t('Staj süresi (iş günü)')),
         Row(
           children: [
             _StepperButton(icon: Icons.remove, onTap: () => onTotalWorkdays((totalWorkdays - 1).clamp(1, 400))),
             Expanded(
               child: Center(
-                child: Text('$totalWorkdays gün', style: AppTextStyles.head(fontSize: 18)),
+                child: Text(t('{n} gün', {'n': totalWorkdays}), style: AppTextStyles.head(fontSize: 18)),
               ),
             ),
             _StepperButton(icon: Icons.add, onTap: () => onTotalWorkdays((totalWorkdays + 1).clamp(1, 400))),
@@ -434,13 +510,11 @@ class _WorkDaysStep extends StatelessWidget {
     required this.onExcludeHolidays,
   });
 
-  static const _labels = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-
   @override
   Widget build(BuildContext context) {
     return _StepScaffold(
-      title: 'Çalışma günleri',
-      subtitle: 'Hangi günler stajdasın? Resmi tatiller otomatik hariç tutulabilir.',
+      title: t('Çalışma günleri'),
+      subtitle: t('Hangi günler stajdasın? Resmi tatiller otomatik hariç tutulabilir.'),
       children: [
         Wrap(
           spacing: 8,
@@ -448,7 +522,7 @@ class _WorkDaysStep extends StatelessWidget {
           children: [
             for (var i = 0; i < 7; i++)
               _DayChip(
-                label: _labels[i],
+                label: weekdayShortNames[i],
                 selected: workDaysMask[i],
                 onTap: () => onToggleDay(i),
               ),
@@ -460,23 +534,23 @@ class _WorkDaysStep extends StatelessWidget {
           value: excludeHolidays,
           onChanged: onExcludeHolidays,
           activeThumbColor: AppColors.ink,
-          title: Text('Resmi tatilleri hariç tut', style: AppTextStyles.body(fontSize: 14)),
-          subtitle: Text('Yılbaşı, bayramlar vb. iş günü sayılmaz', style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)),
+          title: Text(t('Resmi tatilleri hariç tut'), style: AppTextStyles.body(fontSize: 14)),
+          subtitle: Text(t('Yılbaşı, bayramlar vb. iş günü sayılmaz'), style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)),
         ),
         const SizedBox(height: AppSpacing.lg),
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: AppColors.cardBg,
+            color: AppColors.inkLight,
             borderRadius: BorderRadius.circular(AppRadius.card),
           ),
           child: Row(
             children: [
-              const Icon(Icons.flag_outlined, size: 18, color: AppColors.ink),
+              Icon(Icons.flag_outlined, size: 18, color: AppColors.ink),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  'Tahmini bitiş: ${_fmt(estimatedEnd)}',
+                  t('Tahmini bitiş: {date}', {'date': fullDateFor(estimatedEnd)}),
                   style: AppTextStyles.body(fontSize: 14, weight: FontWeight.w600),
                 ),
               ),
@@ -485,11 +559,6 @@ class _WorkDaysStep extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _fmt(DateTime d) {
-    const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-    return '${d.day} ${months[d.month - 1]} ${d.year}';
   }
 }
 
@@ -513,14 +582,14 @@ class _GoalsStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _StepScaffold(
-      title: 'Hedef ve hatırlatma',
-      subtitle: 'Günlük kelime hedefi ilerleme çubuğunda gösterilir.',
+      title: t('Hedef ve hatırlatma'),
+      subtitle: t('Günlük kelime hedefi ilerleme çubuğunda gösterilir.'),
       children: [
-        _FieldLabel('Günlük kelime hedefi'),
+        _FieldLabel(t('Günlük kelime hedefi')),
         Row(
           children: [
             _StepperButton(icon: Icons.remove, onTap: () => onWordGoal((dailyWordGoal - 10).clamp(20, 500))),
-            Expanded(child: Center(child: Text('$dailyWordGoal kelime', style: AppTextStyles.head(fontSize: 18)))),
+            Expanded(child: Center(child: Text(t('{n} kelime', {'n': dailyWordGoal}), style: AppTextStyles.head(fontSize: 18)))),
             _StepperButton(icon: Icons.add, onTap: () => onWordGoal((dailyWordGoal + 10).clamp(20, 500))),
           ],
         ),
@@ -530,8 +599,8 @@ class _GoalsStep extends StatelessWidget {
           value: reminderEnabled,
           onChanged: onReminderEnabled,
           activeThumbColor: AppColors.ink,
-          title: Text('Günlük hatırlatıcı', style: AppTextStyles.body(fontSize: 14)),
-          subtitle: Text('Bugünü doldurmayı unutma bildirimi', style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)),
+          title: Text(t('Günlük hatırlatıcı'), style: AppTextStyles.body(fontSize: 14)),
+          subtitle: Text(t('Bugünü doldurmayı unutma bildirimi'), style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)),
         ),
         if (reminderEnabled) ...[
           const SizedBox(height: AppSpacing.sm),
@@ -557,14 +626,14 @@ class _CapsuleStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _StepScaffold(
-      title: 'Zaman Kapsülü',
-      subtitle: 'Bu iki cevap staj bitene kadar kilitli kalır. Sonra ne olduğunu yanına yazarsın.',
+      title: t('Zaman Kapsülü'),
+      subtitle: t('Bu iki cevap staj bitene kadar kilitli kalır. Sonra ne olduğunu yanına yazarsın.'),
       children: [
-        _FieldLabel('Bu stajdan ne bekliyorsun?'),
-        _TextInput(controller: expectationCtrl, hint: 'Serbest yaz...', maxLines: 3),
+        _FieldLabel(t('Bu stajdan ne bekliyorsun?')),
+        _TextInput(controller: expectationCtrl, hint: t('Serbest yaz...'), maxLines: 3),
         const SizedBox(height: AppSpacing.lg),
-        _FieldLabel('Neyden korkuyorsun?'),
-        _TextInput(controller: fearCtrl, hint: 'Serbest yaz...', maxLines: 3),
+        _FieldLabel(t('Neyden korkuyorsun?')),
+        _TextInput(controller: fearCtrl, hint: t('Serbest yaz...'), maxLines: 3),
       ],
     );
   }
@@ -600,7 +669,7 @@ class _TextInput extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.card), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.card), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.card), borderSide: const BorderSide(color: AppColors.ink, width: 1.5)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.card), borderSide: BorderSide(color: AppColors.ink, width: 1.5)),
       ),
     );
   }
@@ -615,7 +684,7 @@ class _DatePickerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = label ?? _fmt(date!);
+    final text = label ?? fullDateFor(date!);
     return Pressable(
       onTap: onTap,
       pressedScale: 0.92,
@@ -636,11 +705,6 @@ class _DatePickerTile extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _fmt(DateTime d) {
-    const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-    return '${d.day} ${months[d.month - 1]} ${d.year}';
   }
 }
 

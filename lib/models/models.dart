@@ -16,7 +16,7 @@ DateTime parseDateKey(String key) {
 
 /// The fill-state of a single calendar day, derived at render time from the
 /// real [Internship] + [DayEntry] data rather than stored directly.
-enum DayType { filled, empty, holiday, writtenToPaper, future, notWorkday }
+enum DayType { filled, empty, holiday, future, notWorkday }
 
 class CalendarDay {
   final DateTime date;
@@ -25,7 +25,7 @@ class CalendarDay {
 
   const CalendarDay({required this.date, required this.type, this.isToday = false});
 
-  bool get isFilled => type == DayType.filled || type == DayType.writtenToPaper;
+  bool get isFilled => type == DayType.filled;
 }
 
 /// The active internship's configuration — set during onboarding, editable
@@ -35,6 +35,8 @@ class Internship {
   String company;
   String department;
   String supervisor;
+  /// Key from [internshipFields] — picks the Defter's ready-made sentences.
+  String field;
   int totalWorkdays;
   DateTime startDate;
 
@@ -58,6 +60,7 @@ class Internship {
     this.company = '',
     this.department = '',
     this.supervisor = '',
+    this.field = 'general',
     this.totalWorkdays = 20,
     DateTime? startDate,
     List<bool>? workDaysMask,
@@ -79,6 +82,7 @@ class Internship {
         'company': company,
         'department': department,
         'supervisor': supervisor,
+        'field': field,
         'totalWorkdays': totalWorkdays,
         'startDate': dateKey(startDate),
         'workDaysMask': workDaysMask,
@@ -99,6 +103,7 @@ class Internship {
         company: j['company'] ?? '',
         department: j['department'] ?? '',
         supervisor: j['supervisor'] ?? '',
+        field: j['field'] ?? 'general',
         totalWorkdays: j['totalWorkdays'] ?? 20,
         startDate: j['startDate'] != null ? parseDateKey(j['startDate']) : DateTime.now(),
         workDaysMask: (j['workDaysMask'] as List?)?.cast<bool>() ??
@@ -129,7 +134,6 @@ class DayEntry {
   String checkIn;
   String checkOut;
   List<String> tags;
-  bool copiedToPaper;
   bool signed;
 
   // ── Kişisel (Günlüğüm) ──
@@ -140,6 +144,8 @@ class DayEntry {
   String? incidentCategory;
   String dailyWin;
   String song;
+  /// Link to the song (Spotify etc.) when it was shared into the app.
+  String songUrl;
   String journalNote; // free-form legacy note field, kept for continuity
 
   DateTime createdAt;
@@ -153,7 +159,6 @@ class DayEntry {
     this.checkIn = '',
     this.checkOut = '',
     List<String>? tags,
-    this.copiedToPaper = false,
     this.signed = false,
     this.mood = 0,
     this.workload = 0,
@@ -162,6 +167,7 @@ class DayEntry {
     this.incidentCategory,
     this.dailyWin = '',
     this.song = '',
+    this.songUrl = '',
     this.journalNote = '',
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -190,7 +196,6 @@ class DayEntry {
         'checkIn': checkIn,
         'checkOut': checkOut,
         'tags': tags,
-        'copiedToPaper': copiedToPaper,
         'signed': signed,
         'mood': mood,
         'workload': workload,
@@ -199,6 +204,7 @@ class DayEntry {
         'incidentCategory': incidentCategory,
         'dailyWin': dailyWin,
         'song': song,
+        'songUrl': songUrl,
         'journalNote': journalNote,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
@@ -212,7 +218,6 @@ class DayEntry {
         checkIn: j['checkIn'] ?? '',
         checkOut: j['checkOut'] ?? '',
         tags: (j['tags'] as List?)?.cast<String>() ?? [],
-        copiedToPaper: j['copiedToPaper'] ?? false,
         signed: j['signed'] ?? false,
         mood: j['mood'] ?? 0,
         workload: j['workload'] ?? 0,
@@ -221,6 +226,7 @@ class DayEntry {
         incidentCategory: j['incidentCategory'],
         dailyWin: j['dailyWin'] ?? '',
         song: j['song'] ?? '',
+        songUrl: j['songUrl'] ?? '',
         journalNote: j['journalNote'] ?? '',
         createdAt: j['createdAt'] != null ? DateTime.parse(j['createdAt']) : DateTime.now(),
         updatedAt: j['updatedAt'] != null ? DateTime.parse(j['updatedAt']) : DateTime.now(),
@@ -330,7 +336,7 @@ class BingoTask {
     'Kendi başıma bir görevi bitirdim',
     'Bir kere geç kaldım',
     'Birine bir şey öğrettim',
-    'Production\'a bir şey gönderdim',
+    'Yaptığım bir iş gerçekten kullanıldı',
     'Yeni bir araç/teknoloji öğrendim',
   ];
 }

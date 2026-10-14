@@ -8,6 +8,7 @@ import 'motion.dart';
 /// tap feels counted even when you're not looking at the digit.
 class QuickCounterChip extends StatelessWidget {
   final String emoji;
+  final String? label;
   final int count;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
@@ -15,6 +16,7 @@ class QuickCounterChip extends StatelessWidget {
   const QuickCounterChip({
     super.key,
     required this.emoji,
+    this.label,
     required this.count,
     this.onTap,
     this.onLongPress,
@@ -45,6 +47,17 @@ class QuickCounterChip extends StatelessWidget {
               child: Text(emoji, style: const TextStyle(fontSize: 16)),
             ),
             const SizedBox(width: 10),
+            if (label != null) ...[
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 120),
+                child: Text(
+                  label!,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.body(fontSize: 13, color: AppColors.textMuted, weight: FontWeight.w500),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
             PopOnChange(
               trigger: count,
               child: Text(
@@ -75,9 +88,9 @@ class QuickCounterAddButton extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.borderLight, width: 1.5),
+          color: AppColors.inkLight,
         ),
-        child: Icon(Icons.add_rounded, size: 20, color: AppColors.textMuted),
+        child: Icon(Icons.add_rounded, size: 22, color: AppColors.ink),
       ),
     );
   }

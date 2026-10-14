@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/i18n.dart';
 import '../core/tr_text.dart';
 import '../core/official_export.dart';
 import '../core/pdf_export.dart';
@@ -27,8 +28,8 @@ Future<void> showExportSheet(BuildContext context, {DateTime? day}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(day != null
-            ? 'Bu gün için henüz defter yazısı yok.'
-            : 'Henüz doldurulmuş bir defter kaydı yok.'),
+            ? t('Bu gün için henüz defter yazısı yok.')
+            : t('Henüz doldurulmuş bir defter kaydı yok.')),
       ),
     );
     return Future.value();
@@ -37,10 +38,6 @@ Future<void> showExportSheet(BuildContext context, {DateTime? day}) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppColors.cardBg,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.cardLarge)),
-    ),
     builder: (_) => _ExportSheet(
       internship: internship,
       entries: entries,
@@ -73,54 +70,56 @@ class _ExportSheet extends StatelessWidget {
     return SafeArea(
       child: ListView(
         shrinkWrap: true,
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.md),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.md),
         children: [
           Text(
-            day != null ? '${OfficialExport.formatDate(day.date)} — paylaş / indir' : 'Resmi Defter — paylaş / indir',
+            day != null
+                ? t('{date} — paylaş / indir', {'date': OfficialExport.formatDate(day.date)})
+                : t('Resmi Defter — paylaş / indir'),
             style: AppTextStyles.head(fontSize: 17),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Yalnızca defter yazısı paylaşılır. Günlüğüm her zaman sende kalır.',
+            t('Yalnızca defter yazısı paylaşılır. Günlüğüm her zaman sende kalır.'),
             style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted),
           ),
           if (day != null) ...[
-            _Header('Mesaj olarak'),
+            _Header(t('Mesaj olarak')),
             _Option(
               icon: Icons.chat_outlined,
-              label: "WhatsApp'ta gönder",
+              label: t("WhatsApp'ta gönder"),
               onTap: () => _run(context, () => OfficialExport.sendToWhatsApp(OfficialExport.dayText(day))),
             ),
             _Option(
               icon: Icons.share_outlined,
-              label: 'Başka uygulamada paylaş',
+              label: t('Başka uygulamada paylaş'),
               onTap: () => _run(
                 context,
-                () => OfficialExport.shareText(OfficialExport.dayText(day), subject: 'Staj Defteri — ${OfficialExport.formatDate(day.date)}'),
+                () => OfficialExport.shareText(OfficialExport.dayText(day), subject: t('Staj Defteri — {date}', {'date': OfficialExport.formatDate(day.date)})),
               ),
             ),
           ],
-          _Header('Dosya olarak'),
+          _Header(t('Dosya olarak')),
           _Option(
             icon: Icons.picture_as_pdf_outlined,
-            label: 'PDF indir',
+            label: t('PDF indir'),
             onTap: () => _save(context, _Format.pdf),
           ),
           _Option(
             icon: Icons.description_outlined,
-            label: 'Word (.docx) indir',
+            label: t('Word (.docx) indir'),
             onTap: () => _save(context, _Format.docx),
           ),
           _Option(
             icon: Icons.ios_share_outlined,
-            label: 'PDF paylaş',
-            hint: 'WhatsApp, e-posta…',
+            label: t('PDF paylaş'),
+            hint: t('WhatsApp, e-posta…'),
             onTap: () => _share(context, _Format.pdf),
           ),
           _Option(
             icon: Icons.ios_share_outlined,
-            label: 'Word paylaş',
-            hint: 'WhatsApp, e-posta…',
+            label: t('Word paylaş'),
+            hint: t('WhatsApp, e-posta…'),
             onTap: () => _share(context, _Format.docx),
           ),
         ],
@@ -150,7 +149,7 @@ class _ExportSheet extends StatelessWidget {
     _run(context, () async {
       final file = await _build(f);
       final saved = await OfficialExport.saveFile(fileName: file.name, bytes: file.bytes, mimeType: file.mime);
-      if (saved) messenger.showSnackBar(SnackBar(content: Text('${file.name} kaydedildi')));
+      if (saved) messenger.showSnackBar(SnackBar(content: Text(t('{name} kaydedildi', {'name': file.name}))));
     });
   }
 
@@ -161,7 +160,7 @@ class _ExportSheet extends StatelessWidget {
         fileName: file.name,
         bytes: file.bytes,
         mimeType: file.mime,
-        subject: 'Staj Defteri — ${internship.name}',
+        subject: t('Staj Defteri — {date}', {'date': internship.name}),
       );
     });
   }
@@ -174,7 +173,7 @@ class _ExportSheet extends StatelessWidget {
     try {
       await action();
     } catch (_) {
-      messenger.showSnackBar(const SnackBar(content: Text('İşlem tamamlanamadı, tekrar dene.')));
+      messenger.showSnackBar(SnackBar(content: Text(t('İşlem tamamlanamadı, tekrar dene.'))));
     }
   }
 }
@@ -201,7 +200,13 @@ class _Option extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: Icon(icon, color: AppColors.ink),
+        leading: Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: AppColors.inkLight, borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: AppColors.ink, size: 20),
+        ),
         title: Text(label, style: AppTextStyles.body(fontSize: 15)),
         subtitle: hint != null ? Text(hint!, style: AppTextStyles.body(fontSize: 12, color: AppColors.textMuted)) : null,
         onTap: onTap,

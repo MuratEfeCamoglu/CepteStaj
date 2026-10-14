@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
+import '../../core/snippets.dart';
 import '../../data/app_state.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
@@ -14,34 +16,6 @@ import '../../widgets/lined_paper_background.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/responsive_content.dart';
 import '../../widgets/segmented_tabs.dart';
-import '../paper_mode/paper_mode_screen.dart';
-
-const _monthNames = [
-  'Ocak',
-  'Şubat',
-  'Mart',
-  'Nisan',
-  'Mayıs',
-  'Haziran',
-  'Temmuz',
-  'Ağustos',
-  'Eylül',
-  'Ekim',
-  'Kasım',
-  'Aralık',
-];
-const _weekdayNames = [
-  'Pazartesi',
-  'Salı',
-  'Çarşamba',
-  'Perşembe',
-  'Cuma',
-  'Cumartesi',
-  'Pazar',
-];
-
-String weekdayNameFor(DateTime d) => _weekdayNames[d.weekday - 1];
-String shortDateFor(DateTime d) => '${d.day} ${_monthNames[d.month - 1]}';
 
 /// "Gün Detayı" — the note-taking screen for the official side of a day:
 /// the Defter entry and an attached Fotoğraf. The private/personal side
@@ -70,18 +44,18 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
         leading: BackButton(color: AppColors.textPrimary),
         title: Text(
           idx != null
-              ? '${weekdayNameFor(widget.date)} · $idx. gün'
+              ? '${weekdayNameFor(widget.date)} · ${t('{n}. gün', {'n': idx})}'
               : weekdayNameFor(widget.date),
           style: AppTextStyles.head(fontSize: 18),
         ),
         actions: [
           IconButton(
-            tooltip: 'Paylaş / indir',
+            tooltip: t('Paylaş / indir'),
             icon: Icon(Icons.ios_share_rounded, color: AppColors.textPrimary),
             onPressed: () => showExportSheet(context, day: widget.date),
           ),
           IconButton(
-            tooltip: entry.signed ? 'İmzalandı ✓' : 'İmzalandı olarak işaretle',
+            tooltip: entry.signed ? t('İmzalandı ✓') : t('İmzalandı olarak işaretle'),
             icon: Icon(
               entry.signed ? Icons.verified : Icons.verified_outlined,
               color: entry.signed ? AppColors.checkGreen : AppColors.textMuted,
@@ -104,7 +78,7 @@ class _DayDetailScreenState extends State<DayDetailScreen> {
                   AppSpacing.md,
                 ),
                 child: SegmentedTabs(
-                  labels: const ['Defter', 'Fotoğraf'],
+                  labels: [t('Defter'), t('Fotoğraf')],
                   selectedIndex: _tab,
                   onChanged: (i) => setState(() => _tab = i),
                 ),
@@ -134,13 +108,6 @@ class _DefterTabState extends State<_DefterTab> {
   late final TextEditingController _topicCtrl;
   late final TextEditingController _bodyCtrl;
   late final TextEditingController _learnedCtrl;
-
-  static const _defaultSnippets = [
-    'Ekibin daily toplantısına katıldım.',
-    'Mentörümle birebir görüştüm.',
-    'Dokümantasyon inceledim.',
-    'Kod incelemesine (code review) katıldım.',
-  ];
 
   @override
   void initState() {
@@ -188,8 +155,8 @@ class _DefterTabState extends State<_DefterTab> {
       SnackBar(
         content: Text(
           ok
-              ? 'Önceki günün kaydı kopyalandı'
-              : 'Kopyalanacak önceki kayıt yok',
+              ? t('Önceki günün kaydı kopyalandı')
+              : t('Kopyalanacak önceki kayıt yok'),
         ),
       ),
     );
@@ -239,7 +206,7 @@ class _DefterTabState extends State<_DefterTab> {
                               color: AppColors.textMuted,
                             ),
                             label: Text(
-                              'Dünden kopyala',
+                              t('Dünden kopyala'),
                               style: AppTextStyles.body(
                                 fontSize: 12,
                                 color: AppColors.textMuted,
@@ -255,47 +222,11 @@ class _DefterTabState extends State<_DefterTab> {
                             state.updateEntry(widget.date, topic: v),
                         style: AppTextStyles.body(fontSize: 14),
                         decoration: _fieldDecoration(
-                          'Konu (örn. API entegrasyonu)',
+                          t(fieldFor(state.internship?.field ?? 'general').topicHint),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          for (final s in _defaultSnippets)
-                            Pressable(
-                              onTap: () => _insertSnippet(state, s),
-                              pressedScale: 0.94,
-                              child: Container(
-                                padding: const EdgeInsets.fromLTRB(8, 7, 12, 7),
-                                decoration: BoxDecoration(
-                                  color: AppColors.inkLight,
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.add_rounded,
-                                      size: 14,
-                                      color: AppColors.ink,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      s,
-                                      style: AppTextStyles.body(
-                                        fontSize: 12,
-                                        weight: FontWeight.w500,
-                                        color: AppColors.ink,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
+                      _SnippetPanel(onInsert: (s) => _insertSnippet(state, s)),
                       const SizedBox(height: AppSpacing.md),
                       Container(
                         constraints: const BoxConstraints(minHeight: 220),
@@ -345,7 +276,7 @@ class _DefterTabState extends State<_DefterTab> {
                         children: [
                           Expanded(
                             child: _TimeButton(
-                              label: 'Giriş',
+                              label: t('Giriş'),
                               value: entry.checkIn,
                               onPicked: (v) =>
                                   state.updateEntry(widget.date, checkIn: v),
@@ -354,7 +285,7 @@ class _DefterTabState extends State<_DefterTab> {
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: _TimeButton(
-                              label: 'Çıkış',
+                              label: t('Çıkış'),
                               value: entry.checkOut,
                               onPicked: (v) =>
                                   state.updateEntry(widget.date, checkOut: v),
@@ -370,7 +301,7 @@ class _DefterTabState extends State<_DefterTab> {
                         style: AppTextStyles.body(fontSize: 14),
                         minLines: 2,
                         maxLines: 4,
-                        decoration: _fieldDecoration('Öğrendiklerim'),
+                        decoration: _fieldDecoration(t('Öğrendiklerim')),
                       ),
                     ],
                   ),
@@ -423,12 +354,12 @@ class _DefterTabState extends State<_DefterTab> {
                         children: [
                           _CountStat(
                             value: '${entry.wordCount}',
-                            unit: '/ $goal kelime',
+                            unit: t('/ {g} kelime', {'g': goal}),
                           ),
                           _CountStat(
                             value:
                                 '~${entry.lineEstimate(state.internship?.wordsPerLine ?? 12)}',
-                            unit: 'satır',
+                            unit: t('satır'),
                           ),
                           if (progress >= 1)
                             PopIn(
@@ -444,7 +375,7 @@ class _DefterTabState extends State<_DefterTab> {
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(
-                                  'Hedef tamam',
+                                  t('Hedef tamam'),
                                   style: AppTextStyles.body(
                                     fontSize: 11,
                                     weight: FontWeight.w600,
@@ -453,22 +384,16 @@ class _DefterTabState extends State<_DefterTab> {
                                 ),
                               ),
                             ),
-                          if (entry.copiedToPaper)
-                            const Icon(
-                              Icons.check_circle,
-                              size: 18,
-                              color: AppColors.checkGreen,
-                            ),
                         ],
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Pressable(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => PaperModeScreen(date: widget.date),
-                        ),
-                      ),
+                      onTap: () {
+                        FocusScope.of(context).unfocus();
+                        state.saveNow();
+                        Navigator.of(context).maybePop();
+                      },
                       child: Container(
                         padding: const EdgeInsets.fromLTRB(12, 9, 16, 9),
                         decoration: BoxDecoration(
@@ -478,14 +403,14 @@ class _DefterTabState extends State<_DefterTab> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
-                              Icons.edit_note_rounded,
+                            Icon(
+                              Icons.check_rounded,
                               size: 18,
                               color: AppColors.onInk,
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Kağıda geçir',
+                              t('Bitti'),
                               style: AppTextStyles.body(
                                 fontSize: 13,
                                 weight: FontWeight.w600,
@@ -522,7 +447,7 @@ class _DefterTabState extends State<_DefterTab> {
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.card),
-      borderSide: const BorderSide(color: AppColors.ink, width: 1.5),
+      borderSide: BorderSide(color: AppColors.ink, width: 1.5),
     ),
   );
 }
@@ -635,8 +560,8 @@ class _FotografTab extends StatelessWidget {
         SnackBar(
           content: Text(
             fromCamera
-                ? 'Kamera açılamadı. İzinleri kontrol et.'
-                : 'Fotoğraf seçilemedi.',
+                ? t('Kamera açılamadı. İzinleri kontrol et.')
+                : t('Fotoğraf seçilemedi.'),
           ),
         ),
       );
@@ -673,7 +598,7 @@ class _FotografTab extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         Text(
-                          'Bu güne bir fotoğraf ekle',
+                          t('Bu güne bir fotoğraf ekle'),
                           style: AppTextStyles.body(
                             fontSize: 14,
                             color: AppColors.textMuted,
@@ -720,7 +645,7 @@ class _FotografTab extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _add(context, fromCamera: true),
                     icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                    label: const Text('Kamera'),
+                    label: Text(t('Kamera')),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -728,7 +653,7 @@ class _FotografTab extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _add(context, fromCamera: false),
                     icon: const Icon(Icons.photo_library_outlined, size: 18),
-                    label: const Text('Galeri'),
+                    label: Text(t('Galeri')),
                   ),
                 ),
               ],
@@ -748,16 +673,16 @@ class _PhotoTile extends StatelessWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Fotoğrafı sil'),
-        content: const Text('Bu fotoğraf kalıcı olarak silinecek.'),
+        title: Text(t('Fotoğrafı sil')),
+        content: Text(t('Bu fotoğraf kalıcı olarak silinecek.')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Vazgeç'),
+            child: Text(t('Vazgeç')),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Sil'),
+            child: Text(t('Sil')),
           ),
         ],
       ),
@@ -783,9 +708,9 @@ class _PhotoTile extends StatelessWidget {
                 Image.file(
                   File(photo.filePath),
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const ColoredBox(
-                    color: Colors.black12,
-                    child: Icon(Icons.broken_image_outlined),
+                  errorBuilder: (_, __, ___) => ColoredBox(
+                    color: AppColors.sunkenBg,
+                    child: Icon(Icons.broken_image_outlined, color: AppColors.textFaint),
                   ),
                 ),
                 Positioned(
@@ -813,19 +738,19 @@ class _PhotoTile extends StatelessWidget {
                     initialValue: photo.caption,
                     onChanged: (v) => state.updatePhotoCaption(photo.id, v),
                     style: AppTextStyles.body(fontSize: 11),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       isDense: true,
                       filled: false,
                       border: InputBorder.none,
                       focusedBorder: InputBorder.none,
-                      hintText: 'Açıklama...',
+                      hintText: t('Açıklama...'),
                     ),
                   ),
                 ),
                 Tooltip(
                   message: photo.includeInExport
-                      ? 'Resmi Defter PDF\'ine dahil'
-                      : 'PDF\'e ekle (varsayılan: kişisel)',
+                      ? t('Resmi Defter PDF\'ine dahil')
+                      : t('PDF\'e ekle (varsayılan: kişisel)'),
                   child: InkWell(
                     onTap: () => state.togglePhotoIncludeInExport(photo.id),
                     child: Padding(
@@ -847,6 +772,256 @@ class _PhotoTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Ready-made sentences for the student's field plus their own saved ones.
+/// Collapsed to a handful by default so the writing area stays in view.
+class _SnippetPanel extends StatefulWidget {
+  final ValueChanged<String> onInsert;
+  const _SnippetPanel({required this.onInsert});
+
+  @override
+  State<_SnippetPanel> createState() => _SnippetPanelState();
+}
+
+class _SnippetPanelState extends State<_SnippetPanel> {
+  static const _collapsedCount = 6;
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    final field = fieldFor(state.internship?.field ?? 'general');
+    final builtIn = [for (final s in snippetsFor(field.key)) t(s)];
+    final all = [...state.customSnippets, ...builtIn];
+    final shown = _expanded ? all : all.take(_collapsedCount).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(t('Hazır cümleler'), style: AppTextStyles.body(fontSize: 12, weight: FontWeight.w600, color: AppColors.textMuted)),
+            const Spacer(),
+            Pressable(
+              onTap: () => showFieldPicker(context),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(10, 5, 6, 5),
+                decoration: BoxDecoration(color: AppColors.sunkenBg, borderRadius: BorderRadius.circular(999)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('${field.emoji} ${t(field.label)}',
+                        style: AppTextStyles.body(fontSize: 12, weight: FontWeight.w600)),
+                    Icon(Icons.expand_more_rounded, size: 16, color: AppColors.textMuted),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        AnimatedSize(
+          duration: AppMotion.of(context, AppMotion.standard),
+          curve: AppMotion.emphasized,
+          alignment: Alignment.topLeft,
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final s in shown)
+                _SnippetChip(
+                  text: s,
+                  custom: state.customSnippets.contains(s),
+                  onTap: () => widget.onInsert(s),
+                  onLongPress: state.customSnippets.contains(s) ? () => _confirmRemove(context, state, s) : null,
+                ),
+              _SnippetChip(
+                text: t('Kendi cümlen'),
+                icon: Icons.bookmark_add_outlined,
+                muted: true,
+                onTap: () => _addCustom(context, state),
+              ),
+              if (all.length > _collapsedCount)
+                _SnippetChip(
+                  text: _expanded ? t('Daha az') : t('Tümü ({n})', {'n': all.length}),
+                  icon: _expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                  muted: true,
+                  onTap: () => setState(() => _expanded = !_expanded),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _addCustom(BuildContext context, AppState state) {
+    final ctrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(t('Kendi cümleni kaydet')),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          maxLines: 3,
+          minLines: 1,
+          decoration: InputDecoration(hintText: t('Sık yazdığın bir cümle')),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(t('Vazgeç'))),
+          TextButton(
+            onPressed: () {
+              state.addCustomSnippet(ctrl.text);
+              Navigator.of(ctx).pop();
+            },
+            child: Text(t('Kaydet')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmRemove(BuildContext context, AppState state, String s) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(t('Cümleyi sil')),
+        content: Text('"$s"'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(t('Vazgeç'))),
+          TextButton(
+            onPressed: () {
+              state.removeCustomSnippet(s);
+              Navigator.of(ctx).pop();
+            },
+            child: Text(t('Sil')),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SnippetChip extends StatelessWidget {
+  final String text;
+  final IconData icon;
+  final bool custom;
+  final bool muted;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  const _SnippetChip({
+    required this.text,
+    required this.onTap,
+    this.icon = Icons.add_rounded,
+    this.custom = false,
+    this.muted = false,
+    this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = muted ? AppColors.textMuted : (custom ? AppColors.violet : AppColors.ink);
+    final bg = muted ? AppColors.sunkenBg : (custom ? AppColors.tint(AppColors.violet) : AppColors.inkLight);
+    return Pressable(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      pressedScale: 0.94,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 7, 12, 7),
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(custom ? Icons.bookmark_rounded : icon, size: 14, color: fg),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                text,
+                style: AppTextStyles.body(fontSize: 12, weight: FontWeight.w500, color: fg),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet for choosing the internship field — shared by the Defter
+/// sentence panel and Ayarlar.
+Future<void> showFieldPicker(BuildContext context) {
+  final state = context.read<AppState>();
+  final current = state.internship?.field ?? 'general';
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (ctx) => SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(t('Staj alanın'), style: AppTextStyles.head(fontSize: 18)),
+            const SizedBox(height: 4),
+            Text(
+              t('Hazır cümleler bu alana göre gösterilir.'),
+              style: AppTextStyles.body(fontSize: 13, color: AppColors.textMuted),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            FieldChips(
+              selected: current,
+              onSelected: (key) {
+                Navigator.of(ctx).pop();
+                if (key != current) state.setField(key);
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// Wrap of selectable field chips, used in onboarding and the picker sheet.
+class FieldChips extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onSelected;
+  const FieldChips({super.key, required this.selected, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final f in internshipFields)
+          Pressable(
+            onTap: () => onSelected(f.key),
+            child: AnimatedContainer(
+              duration: AppMotion.of(context, AppMotion.standard),
+              curve: AppMotion.standardCurve,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: f.key == selected ? AppColors.ink : AppColors.sunkenBg,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '${f.emoji}  ${t(f.label)}',
+                style: AppTextStyles.body(
+                  fontSize: 13,
+                  weight: FontWeight.w600,
+                  color: f.key == selected ? AppColors.onInk : AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

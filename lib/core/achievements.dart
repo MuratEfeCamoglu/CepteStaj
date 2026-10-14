@@ -1,4 +1,5 @@
 import '../models/models.dart';
+import 'i18n.dart';
 
 /// Pure badge-evaluation engine — no side effects, safe to call after every
 /// write and in tests. Given the current data, it returns the full badge
@@ -49,7 +50,7 @@ class AchievementEngine {
       for (final (key, label, emoji) in definitions)
         AppBadge(
           key: key,
-          label: label,
+          label: t(label),
           emoji: emoji,
           earned: earned[key] ?? false,
           earnedAt: earnedAtByKey?[key],

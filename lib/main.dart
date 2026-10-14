@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'core/app_info.dart';
+import 'core/i18n.dart';
 import 'data/app_state.dart';
 import 'screens/splash/splash_screen.dart';
 import 'theme/app_theme.dart';
@@ -43,6 +44,8 @@ class CepteStajApp extends StatefulWidget {
 class _CepteStajAppState extends State<CepteStajApp>
     with WidgetsBindingObserver {
   late final AppState _state;
+  bool? _lastDark;
+  String? _lastLang;
 
   @override
   void initState() {
@@ -55,6 +58,33 @@ class _CepteStajAppState extends State<CepteStajApp>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() => _state.onPlatformBrightnessChanged();
+
+  /// Colors ([AppColors]) and strings ([t]) are read from static flags, not
+  /// from an InheritedWidget, so a theme or language switch has to dirty
+  /// every element itself — otherwise `const` widgets and pushed routes
+  /// that don't listen to [AppState] keep the old colors/text (the dark
+  /// theme used to come up half-light this way). Element state survives,
+  /// so the user stays exactly where they were.
+  void _rebuildAllIfAppearanceChanged(AppState state) {
+    final dark = state.isDarkTheme;
+    final lang = L10n.lang;
+    final changed = (_lastDark != null && _lastDark != dark) || (_lastLang != null && _lastLang != lang);
+    _lastDark = dark;
+    _lastLang = lang;
+    if (!changed) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      void visit(Element e) {
+        e.markNeedsBuild();
+        e.visitChildren(visit);
+      }
+
+      (context as Element).visitChildren(visit);
+    });
   }
 
   @override
@@ -72,13 +102,17 @@ class _CepteStajAppState extends State<CepteStajApp>
       value: _state,
       child: Consumer<AppState>(
         builder: (context, state, _) {
+          _rebuildAllIfAppearanceChanged(state);
           return MaterialApp(
             title: 'Cepte Staj',
             debugShowCheckedModeBanner: false,
-            locale: const Locale('tr', 'TR'),
-            supportedLocales: const [Locale('tr', 'TR')],
+            locale: L10n.locale,
+            supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
             localizationsDelegates: GlobalMaterialLocalizations.delegates,
             theme: state.isDarkTheme ? AppTheme.dark() : AppTheme.light(),
+            // AppColors flips instantly; animating the ThemeData on top of
+            // that would tween stock widgets out of sync with custom ones.
+            themeAnimationDuration: Duration.zero,
             // Most tabs have no AppBar, so nothing else sets the status /
             // nav bar icon colour — without this they stay white on the
             // light theme's cream background under Android edge-to-edge.

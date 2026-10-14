@@ -6,6 +6,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../models/models.dart';
+import 'i18n.dart';
 
 /// Generates and shares the "Resmi Defter PDF".
 ///
@@ -86,11 +87,11 @@ class PdfExportService {
                   if (e.body.isNotEmpty) pw.Text(e.body, style: const pw.TextStyle(fontSize: 11)),
                   if (e.learned.isNotEmpty) ...[
                     pw.SizedBox(height: 4),
-                    pw.Text('Öğrendiklerim: ${e.learned}', style: const pw.TextStyle(fontSize: 11)),
+                    pw.Text('${t('Öğrendiklerim:')} ${e.learned}', style: const pw.TextStyle(fontSize: 11)),
                   ],
                   if (e.checkIn.isNotEmpty || e.checkOut.isNotEmpty)
                     pw.Text(
-                      'Giriş: ${e.checkIn}   Çıkış: ${e.checkOut}',
+                      '${t('Giriş')}: ${e.checkIn}   ${t('Çıkış')}: ${e.checkOut}',
                       style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
                     ),
                   for (final ph in exportPhotos[e.date] ?? const <({pw.MemoryImage image, String caption})>[]) ...[
@@ -107,7 +108,7 @@ class PdfExportService {
             ),
           ],
           if (withContent.isEmpty)
-            pw.Text('Henüz doldurulmuş bir defter kaydı yok.', style: const pw.TextStyle(fontSize: 12)),
+            pw.Text(t('Henüz doldurulmuş bir defter kaydı yok.'), style: const pw.TextStyle(fontSize: 12)),
         ],
       ),
     );

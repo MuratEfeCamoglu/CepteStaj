@@ -11,19 +11,23 @@ class SegmentedTabs extends StatelessWidget {
   final List<String> labels;
   final int selectedIndex;
   final ValueChanged<int> onChanged;
-  final Color activeColor;
+  final Color? activeColor;
+  final Color? activeForeground;
 
   const SegmentedTabs({
     super.key,
     required this.labels,
     required this.selectedIndex,
     required this.onChanged,
-    this.activeColor = AppColors.ink,
+    this.activeColor,
+    this.activeForeground,
   });
 
   @override
   Widget build(BuildContext context) {
     final n = labels.length;
+    final activeColor = this.activeColor ?? AppColors.ink;
+    final activeForeground = this.activeForeground ?? AppColors.onInk;
     final duration = AppMotion.of(context, AppMotion.standard);
     return Container(
       height: 44,
@@ -66,7 +70,7 @@ class SegmentedTabs extends StatelessWidget {
                           style: AppTextStyles.body(
                             fontSize: 13,
                             weight: FontWeight.w600,
-                            color: i == selectedIndex ? AppColors.onInk : AppColors.textMuted,
+                            color: i == selectedIndex ? activeForeground : AppColors.textMuted,
                           ),
                           child: Text(labels[i]),
                         ),

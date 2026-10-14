@@ -3,9 +3,11 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart' show SchedulerBinding;
 
 import '../core/achievements.dart';
 import '../core/holidays.dart';
+import '../core/i18n.dart';
 import '../core/id_gen.dart';
 import '../core/local_store.dart';
 import '../core/notification_service.dart';
@@ -33,10 +35,21 @@ class AppState extends ChangeNotifier {
   final List<QuickCounter> quickCounters = [];
   final List<MentorQuote> mentorQuotes = [];
   final List<BingoTask> bingoTasks = [];
+  /// The user's own saved Defter sentences, shown with the ready-made ones.
+  final List<String> customSnippets = [];
   final Map<String, DateTime> _badgeEarnedAt = {};
 
-  bool isDarkTheme = false;
+  /// 'system' | 'light' | 'dark'.
+  String themeMode = 'system';
+  /// 'tr' | 'en' — see [L10n].
+  String language = 'tr';
   double textScale = 1.0; // 0.9 / 1.0 / 1.15
+
+  bool get isDarkTheme => switch (themeMode) {
+        'dark' => true,
+        'light' => false,
+        _ => SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark,
+      };
   String? _pinHash;
   bool personalUnlockedThisSession = true;
 
@@ -51,6 +64,9 @@ class AppState extends ChangeNotifier {
     final json = await LocalStore.load();
     if (json != null) {
       _applyBackupJson(json, notify: false);
+    } else {
+      language = L10n.deviceDefault();
+      L10n.setLang(language);
     }
     AppColors.setDark(isDarkTheme);
     loading = false;
@@ -81,8 +97,8 @@ class AppState extends ChangeNotifier {
   void setupInternship(Internship value) {
     internship = value;
     if (bingoTasks.isEmpty) {
-      for (final t in BingoTask.defaultTasks) {
-        bingoTasks.add(BingoTask(id: IdGen.next(), text: t));
+      for (final task in BingoTask.defaultTasks) {
+        bingoTasks.add(BingoTask(id: IdGen.next(), text: task));
       }
     }
     if (quickCounters.isEmpty) {
@@ -213,15 +229,6 @@ class AppState extends ChangeNotifier {
     return streak;
   }
 
-  /// Last 7 calendar days, true if that day has a filled entry (used for
-  /// the home screen streak dots).
-  List<bool> get streakWeek {
-    return [
-      for (var offset = 6; offset >= 0; offset--)
-        _entries[dateKey(today.subtract(Duration(days: offset)))]?.hasOfficialContent ?? false,
-    ];
-  }
-
   List<CalendarDay> calendarForMonth(DateTime month) {
     final i = internship;
     if (i == null) return const [];
@@ -245,8 +252,6 @@ class AppState extends ChangeNotifier {
     } else if (date.isBefore(WorkdayCalculator.dateOnly(i.startDate)) || date.isAfter(endDate)) {
       // Outside the internship window: an ordinary workday, never "missing".
       type = DayType.notWorkday;
-    } else if (entry?.copiedToPaper == true) {
-      type = DayType.writtenToPaper;
     } else if (entry?.hasOfficialContent == true) {
       type = DayType.filled;
     } else {
@@ -259,6 +264,76 @@ class AppState extends ChangeNotifier {
     final now = today;
     return calendarForMonth(now).where((d) => d.isFilled).length;
   }
+
+  bool isInInternship(DateTime date) {
+    final i = internship;
+    if (i == null) return false;
+    final d = WorkdayCalculator.dateOnly(date);
+    return !d.isBefore(WorkdayCalculator.dateOnly(i.startDate)) && !d.isAfter(endDate);
+  }
+
+  bool get internshipFinished => hasInternship && today.isAfter(endDate);
+  bool get internshipNotStarted => hasInternship && today.isBefore(WorkdayCalculator.dateOnly(internship!.startDate));
+
+  /// Calendar days from today to the (estimated) last day, never negative.
+  int get remainingCalendarDays => endDate.difference(today).inDays.clamp(0, 100000);
+
+  /// Past/today workdays inside the internship that still have no Defter
+  /// text — newest first, so the home screen can offer them for catch-up.
+  List<DateTime> get missingDays {
+    final i = internship;
+    if (i == null) return const [];
+    final out = <DateTime>[];
+    final yesterday = DateTime(today.year, today.month, today.day - 1);
+    var cursor = yesterday.isAfter(endDate) ? endDate : yesterday;
+    final start = WorkdayCalculator.dateOnly(i.startDate);
+    var guard = 0;
+    while (!cursor.isBefore(start) && guard < 800) {
+      if (isWorkday(cursor) && !(_entries[dateKey(cursor)]?.hasOfficialContent ?? false)) {
+        out.add(cursor);
+      }
+      cursor = DateTime(cursor.year, cursor.month, cursor.day - 1);
+      guard++;
+    }
+    return out;
+  }
+
+  /// Most recently dated entries that have Defter text.
+  List<DayEntry> recentEntries(int count) {
+    final filled = _entries.values.where((e) => e.hasOfficialContent).toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+    return filled.take(count).toList();
+  }
+
+  /// Average mood (1..5) over the last [days] calendar days, or null when
+  /// no mood was logged in that window.
+  double? averageMood({int days = 7}) {
+    final moods = [
+      for (var offset = 0; offset < days; offset++)
+        _entries[dateKey(DateTime(today.year, today.month, today.day - offset))]?.mood ?? 0,
+    ].where((m) => m > 0).toList();
+    if (moods.isEmpty) return null;
+    return moods.reduce((a, b) => a + b) / moods.length;
+  }
+
+  /// Words written in a given month (Defter body only).
+  int wordsInMonth(DateTime month) => _entries.values.where((e) {
+        final d = parseDateKey(e.date);
+        return d.year == month.year && d.month == month.month;
+      }).fold(0, (sum, e) => sum + e.wordCount);
+
+  /// Official holidays that fall in [month], in date order.
+  List<(DateTime, String)> holidaysInMonth(DateTime month) {
+    final days = DateTime(month.year, month.month + 1, 0).day;
+    return [
+      for (var d = 1; d <= days; d++)
+        if (TrHolidays.nameFor(DateTime(month.year, month.month, d)) case final name?)
+          (DateTime(month.year, month.month, d), name),
+    ];
+  }
+
+  /// Read-only lookup — unlike [entryFor] it never creates an empty entry.
+  DayEntry? existingEntry(DateTime date) => _entries[dateKey(date)];
 
   // ── Day entries ──────────────────────────────────────────────────
   DayEntry entryFor(DateTime date) {
@@ -294,10 +369,34 @@ class AppState extends ChangeNotifier {
     if (incident != null) e.incident = incident;
     if (incidentCategory != null) e.incidentCategory = incidentCategory;
     if (dailyWin != null) e.dailyWin = dailyWin;
-    if (song != null) e.song = song;
+    if (song != null) {
+      e.song = song;
+      // A cleared song shouldn't keep pointing at the old track.
+      if (song.trim().isEmpty) e.songUrl = '';
+    }
     if (journalNote != null) e.journalNote = journalNote;
     e.updatedAt = DateTime.now();
     _afterMutation();
+  }
+
+  /// True while a shared Spotify link's name is being looked up, so the
+  /// journal can show "loading" instead of an empty title.
+  bool songLookupPending = false;
+
+  void setSongLookupPending(bool value) {
+    songLookupPending = value;
+    notifyListeners();
+  }
+
+  /// A song shared in from Spotify (or another music app). Replaces the
+  /// whole song — an empty [title] (link-only share) is filled in later by
+  /// the name lookup or by the user.
+  void setSharedSong(DateTime date, {required String title, String? url}) {
+    final e = entryFor(date);
+    e.song = title.trim();
+    e.songUrl = url ?? '';
+    e.updatedAt = DateTime.now();
+    _afterMutation(immediate: true);
   }
 
   void toggleMoodReason(DateTime date, String reason) {
@@ -326,11 +425,6 @@ class AppState extends ChangeNotifier {
     e.updatedAt = DateTime.now();
     _afterMutation(immediate: true);
     return true;
-  }
-
-  void markCopiedToPaper(DateTime date) {
-    entryFor(date).copiedToPaper = true;
-    _afterMutation(immediate: true);
   }
 
   void markSigned(DateTime date) {
@@ -392,6 +486,21 @@ class AppState extends ChangeNotifier {
   void removeCounterAt(int index) {
     if (index < 0 || index >= quickCounters.length) return;
     quickCounters.removeAt(index);
+    _afterMutation(immediate: true);
+  }
+
+  // ── Defter sentences ───────────────────────────────────────────────
+  void setField(String field) => updateInternship((i) => i.field = field);
+
+  void addCustomSnippet(String text) {
+    final s = text.trim();
+    if (s.isEmpty || customSnippets.contains(s)) return;
+    customSnippets.insert(0, s);
+    _afterMutation(immediate: true);
+  }
+
+  void removeCustomSnippet(String text) {
+    customSnippets.remove(text);
     _afterMutation(immediate: true);
   }
 
@@ -489,9 +598,25 @@ class AppState extends ChangeNotifier {
   }
 
   // ── Appearance ──────────────────────────────────────────────────────
-  void setDarkTheme(bool value) {
-    isDarkTheme = value;
-    AppColors.setDark(value);
+  void setThemeMode(String value) {
+    themeMode = value;
+    AppColors.setDark(isDarkTheme);
+    _afterMutation(immediate: true);
+  }
+
+  /// Called when the phone's light/dark setting changes — only matters
+  /// while following the system.
+  void onPlatformBrightnessChanged() {
+    if (themeMode != 'system') return;
+    AppColors.setDark(isDarkTheme);
+    notifyListeners();
+  }
+
+  void setLanguage(String value) {
+    language = value;
+    L10n.setLang(value);
+    _refreshBadges();
+    _applyReminder();
     _afterMutation(immediate: true);
   }
 
@@ -538,10 +663,11 @@ class AppState extends ChangeNotifier {
     quickCounters.clear();
     mentorQuotes.clear();
     bingoTasks.clear();
+    customSnippets.clear();
     _badgeEarnedAt.clear();
     _badges = const [];
-    isDarkTheme = false;
-    AppColors.setDark(false);
+    themeMode = 'system';
+    AppColors.setDark(isDarkTheme);
     textScale = 1.0;
     _pinHash = null;
     personalUnlockedThisSession = true;
@@ -560,8 +686,10 @@ class AppState extends ChangeNotifier {
         'counters': quickCounters.map((c) => c.toJson()).toList(),
         'mentorQuotes': mentorQuotes.map((q) => q.toJson()).toList(),
         'bingoTasks': bingoTasks.map((t) => t.toJson()).toList(),
+        'customSnippets': customSnippets,
         'badgeEarnedAt': _badgeEarnedAt.map((k, v) => MapEntry(k, v.toIso8601String())),
-        'isDarkTheme': isDarkTheme,
+        'themeMode': themeMode,
+        'language': language,
         'textScale': textScale,
         'pinHash': _pinHash,
       };
@@ -592,6 +720,10 @@ class AppState extends ChangeNotifier {
       ..clear()
       ..addAll((json['bingoTasks'] as List? ?? []).map((r) => BingoTask.fromJson(Map<String, dynamic>.from(r))));
 
+    customSnippets
+      ..clear()
+      ..addAll((json['customSnippets'] as List? ?? []).cast<String>());
+
     _badgeEarnedAt
       ..clear()
       ..addEntries(
@@ -600,7 +732,13 @@ class AppState extends ChangeNotifier {
             .map((e) => MapEntry(e.key, DateTime.parse(e.value))),
       );
 
-    isDarkTheme = json['isDarkTheme'] ?? false;
+    // Older saves only stored a dark/light bool; an explicit dark choice
+    // stays dark, everything else now follows the phone.
+    themeMode = json['themeMode'] ?? ((json['isDarkTheme'] ?? false) == true ? 'dark' : 'system');
+    // Saves from before English support are Turkish users.
+    language = json['language'] ?? 'tr';
+    L10n.setLang(language);
+    AppColors.setDark(isDarkTheme);
     textScale = (json['textScale'] as num?)?.toDouble() ?? 1.0;
     _pinHash = json['pinHash'];
     personalUnlockedThisSession = _pinHash == null;

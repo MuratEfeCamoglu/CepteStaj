@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../data/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -37,7 +38,7 @@ class _PersonalLockViewState extends State<PersonalLockView> {
     } else {
       HapticFeedback.mediumImpact();
       setState(() {
-        _error = 'Yanlış PIN';
+        _error = t('Yanlış PIN');
         _attempts++;
       });
       _ctrl.clear();
@@ -60,7 +61,7 @@ class _PersonalLockViewState extends State<PersonalLockView> {
                   color: AppColors.coralLight,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.lock_rounded,
                   size: 32,
                   color: AppColors.coral,
@@ -68,10 +69,10 @@ class _PersonalLockViewState extends State<PersonalLockView> {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text('Günlüğüm kilitli', style: AppTextStyles.hand(fontSize: 34)),
+            Text(t('Günlüğüm kilitli'), style: AppTextStyles.hand(fontSize: 34)),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Devam etmek için PIN gir',
+              t('Devam etmek için PIN gir'),
               style: AppTextStyles.body(
                 fontSize: 13,
                 color: AppColors.textMuted,
@@ -99,7 +100,7 @@ class _PersonalLockViewState extends State<PersonalLockView> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.card),
-                    borderSide: const BorderSide(
+                    borderSide: BorderSide(
                       color: AppColors.coral,
                       width: 1.5,
                     ),
@@ -109,8 +110,9 @@ class _PersonalLockViewState extends State<PersonalLockView> {
             ),
             const SizedBox(height: AppSpacing.md),
             PrimaryButton(
-              label: 'Kilidi aç',
+              label: t('Kilidi aç'),
               color: AppColors.coral,
+              foreground: AppColors.onCoral,
               onTap: _submit,
             ),
           ],
@@ -138,11 +140,11 @@ Future<String?> showPinDialog(BuildContext context, {required String title}) {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(),
-          child: const Text('Vazgeç'),
+          child: Text(t('Vazgeç')),
         ),
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(ctrl.text.trim()),
-          child: const Text('Tamam'),
+          child: Text(t('Tamam')),
         ),
       ],
     ),

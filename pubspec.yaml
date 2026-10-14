@@ -1,5 +1,5 @@
 name: cepte_staj
-description: "Cepte Staj — an internship notebook app. Track work days, keep a daily Defter, copy entries to your paper notebook, and journal privately."
+description: "Cepte Staj — an internship notebook app. Track work days, keep a daily Defter, and journal privately."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -49,7 +49,6 @@ dependencies:
   crypto: ^3.0.7
   flutter_timezone: ^5.1.0
   collection: ^1.19.1
-  wakelock_plus: ^1.5.2
   archive: ^4.0.9
   package_info_plus: ^10.2.2
   url_launcher: ^6.3.3
@@ -89,7 +88,7 @@ flutter:
   # Bricolage Grotesque (display/headings) + Inter (body/tabs), and Caveat —
   # handwriting, used only on the private Günlüğüm side so the two layers
   # read differently at a glance. Bundled (not fetched at
-  # runtime) so the app looks right offline and needs no INTERNET permission.
+  # runtime) so the app looks right offline.
   fonts:
     - family: Inter
       fonts:

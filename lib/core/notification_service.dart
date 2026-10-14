@@ -4,6 +4,8 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'i18n.dart';
+
 /// Wraps flutter_local_notifications for the single daily "doldurmayı
 /// unutma" reminder. Every call is defensive (try/catch) — a notification
 /// failing to schedule should never crash the app or block saving an entry.
@@ -66,21 +68,21 @@ class NotificationService {
       if (scheduled.isBefore(now)) {
         scheduled = scheduled.add(const Duration(days: 1));
       }
-      const details = NotificationDetails(
+      final details = NotificationDetails(
         android: AndroidNotificationDetails(
           'daily_reminder',
-          'Günlük hatırlatıcı',
-          channelDescription: 'Bugünü doldurmayı hatırlatır',
+          t('Günlük hatırlatıcı'),
+          channelDescription: t('Bugünü doldurmayı hatırlatır'),
           importance: Importance.defaultImportance,
         ),
-        iOS: DarwinNotificationDetails(),
+        iOS: const DarwinNotificationDetails(),
       );
       await _plugin.zonedSchedule(
         id: _dailyReminderId,
         scheduledDate: scheduled,
         notificationDetails: details,
         title: 'Cepte Staj',
-        body: 'Bugünü doldurmayı unutma ✍️',
+        body: t('Bugünü doldurmayı unutma ✍️'),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.time,
       );

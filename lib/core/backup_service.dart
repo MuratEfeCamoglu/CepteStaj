@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'i18n.dart';
+
 /// Full-state backup/restore — unlike [PdfExportService], this intentionally
 /// includes the personal layer too, since it's a device-to-device backup
 /// the user makes for themselves, not something shown to a supervisor.
@@ -33,8 +35,8 @@ class BackupService {
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(zipPath, mimeType: 'application/zip')],
-        subject: 'Cepte Staj yedek dosyası',
-        text: 'Cepte Staj — veri yedeği',
+        subject: t('Cepte Staj yedek dosyası'),
+        text: t('Cepte Staj — veri yedeği'),
       ),
     );
   }

@@ -14,19 +14,27 @@ class PrimaryButton extends StatelessWidget {
   /// Shows the trailing arrow chip when non-null (kept as a String for
   /// call-site compatibility; the value itself isn't drawn).
   final String? trailingArrow;
-  final Color color;
+  /// Fill color; defaults to the official-side [AppColors.ink].
+  final Color? color;
+  /// Label/icon color; defaults to [AppColors.onInk].
+  final Color? foreground;
+  final IconData? icon;
 
   const PrimaryButton({
     super.key,
     required this.label,
     this.onTap,
     this.trailingArrow,
-    this.color = AppColors.ink,
+    this.color,
+    this.foreground,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
     final enabled = onTap != null;
+    final color = this.color ?? AppColors.ink;
+    final fg = foreground ?? AppColors.onInk;
     final radius = BorderRadius.circular(AppRadius.pill);
     return Pressable(
       onTap: onTap,
@@ -37,20 +45,38 @@ class PrimaryButton extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 56),
         padding: EdgeInsets.fromLTRB(AppSpacing.xxl, AppSpacing.sm, trailingArrow != null ? AppSpacing.sm : AppSpacing.xxl, AppSpacing.sm),
         decoration: BoxDecoration(
-          color: enabled ? color : color.withValues(alpha: 0.4),
+          gradient: enabled
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color.lerp(color, Colors.white, AppColors.isDark ? 0.08 : 0.12)!, color],
+                )
+              : null,
+          color: enabled ? null : color.withValues(alpha: 0.4),
           borderRadius: radius,
           boxShadow: enabled
-              ? [BoxShadow(color: color.withValues(alpha: 0.32), blurRadius: 20, offset: const Offset(0, 8))]
+              ? [BoxShadow(color: color.withValues(alpha: AppColors.isDark ? 0.22 : 0.34), blurRadius: 22, offset: const Offset(0, 8))]
               : null,
         ),
         child: Row(
           mainAxisAlignment: trailingArrow != null ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
           children: [
             Flexible(
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.body(fontSize: 16, weight: FontWeight.w600, color: AppColors.onInk),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 20, color: fg),
+                    const SizedBox(width: 8),
+                  ],
+                  Flexible(
+                    child: Text(
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.body(fontSize: 16, weight: FontWeight.w600, color: fg),
+                    ),
+                  ),
+                ],
               ),
             ),
             if (trailingArrow != null)
@@ -58,10 +84,10 @@ class PrimaryButton extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.onInk.withValues(alpha: 0.16),
+                  color: fg.withValues(alpha: 0.16),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.arrow_forward_rounded, color: AppColors.onInk, size: 20),
+                child: Icon(Icons.arrow_forward_rounded, color: fg, size: 20),
               ),
           ],
         ),
