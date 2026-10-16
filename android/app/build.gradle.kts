@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.ceptestaj.cepte_staj"
+        applicationId = "com.ceptestaj.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
