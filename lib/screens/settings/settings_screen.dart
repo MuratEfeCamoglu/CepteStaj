@@ -155,7 +155,7 @@ class SettingsScreen extends StatelessWidget {
                     trailing: 'v${AppInfo.version}',
                     onTap: () => showAboutDialog(
                       context: context,
-                      applicationName: 'Cepte Staj',
+                      applicationName: t('Cepte Staj'),
                       applicationVersion: 'v${AppInfo.version}',
                       applicationLegalese: t('Verilerin yalnızca telefonunda tutulur. Günlüğüm asla Resmi Defter PDF\'ine girmez. Spotify\'dan bir şarkı paylaştığında yalnızca o şarkının bağlantısı, adını öğrenmek için Spotify\'a gönderilir.'),
                     ),

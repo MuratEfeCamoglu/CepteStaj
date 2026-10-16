@@ -354,7 +354,7 @@ class _MonthCard extends StatelessWidget {
                     _DayCell(
                       day: day,
                       mode: mode,
-                      mood: state.existingEntry(day.date)?.mood ?? 0,
+                      mood: state.personalLocked ? 0 : state.existingEntry(day.date)?.mood ?? 0,
                       selected: selected == day.date,
                       isStart: start != null && day.date == start,
                       isEnd: state.hasInternship && day.date == end,
@@ -684,7 +684,7 @@ class _DayPreview extends StatelessWidget {
                 ),
               if (photos > 0) _InfoPill(icon: Icons.photo_outlined, text: t('{n} fotoğraf', {'n': photos})),
               if (entry != null && entry.signed) _InfoPill(icon: Icons.verified_rounded, text: t('İmzalandı'), color: AppColors.checkGreen),
-              if (entry != null && entry.mood > 0)
+              if (entry != null && entry.mood > 0 && !state.personalLocked)
                 _InfoPill(emoji: moodEmojis[entry.mood - 1], text: t('ruh hali'), color: AppColors.coral),
             ],
           ),

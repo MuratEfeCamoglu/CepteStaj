@@ -97,7 +97,7 @@ class _JournalScreenState extends State<JournalScreen> {
         }
         _prevHasLine = state.bingoHasLine;
 
-        final locked = state.hasPinLock && !state.personalUnlockedThisSession;
+        final locked = state.personalLocked;
 
         return SafeArea(
           bottom: false,

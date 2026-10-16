@@ -28,7 +28,8 @@ const Map<String, String> enStrings = {
 
   // ── Splash / onboarding ─────────────────────────────────────────────
   'Staj defterin, cebinde.': 'Your internship notebook, in your pocket.',
-  "Cepte Staj'a hoş geldin": 'Welcome to Cepte Staj',
+  'Cepte Staj': 'Intern Diary',
+  "Cepte Staj'a hoş geldin": 'Welcome to Intern Diary',
   'Gün içinde hızlıca not al, defterini dakikalar içinde tamamla. Staj bir ödev değil, hatırlanır bir deneyim.':
       'Jot quick notes during the day and finish your notebook in minutes. An internship isn\'t homework — it\'s an experience worth remembering.',
   'Verilerin sadece telefonunda': 'Your data stays on your phone',
@@ -326,7 +327,7 @@ const Map<String, String> enStrings = {
   'gün boş kaldı': 'days left empty',
   "Spotify'da aç": 'Open in Spotify',
   "Spotify'dan seç": 'Pick from Spotify',
-  "Spotify'da şarkıda Paylaş → Cepte Staj'a dokun, buraya gelsin.": 'In Spotify, tap Share → Cepte Staj on a song and it lands here.',
+  "Spotify'da şarkıda Paylaş → Cepte Staj'a dokun, buraya gelsin.": 'In Spotify, tap Share → Intern Diary on a song and it lands here.',
 
   // ── Journal ─────────────────────────────────────────────────────────
   'Deftere gitmez': 'Never goes in the notebook',
@@ -450,7 +451,7 @@ const Map<String, String> enStrings = {
   'Yedekten geri yükle': 'Restore from backup',
   'Tüm verileri sıfırla': 'Erase all data',
   'Hakkında': 'About',
-  'Cepte Staj hakkında': 'About Cepte Staj',
+  'Cepte Staj hakkında': 'About Intern Diary',
   "Verilerin yalnızca telefonunda tutulur. Günlüğüm asla Resmi Defter PDF'ine girmez. Spotify'dan bir şarkı paylaştığında yalnızca o şarkının bağlantısı, adını öğrenmek için Spotify'a gönderilir.":
       'Your data is kept only on your phone. My Journal never goes into the Official Notebook PDF. When you share a song from Spotify, only that song\'s link is sent to Spotify to look up its name.',
   'Kilidi kaldırmak için PIN gir': 'Enter your PIN to remove the lock',
@@ -486,8 +487,8 @@ const Map<String, String> enStrings = {
   'İşlem tamamlanamadı, tekrar dene.': 'Something went wrong, please try again.',
   'Konu:': 'Topic:',
   'Öğrendiklerim:': 'What I learned:',
-  'Cepte Staj yedek dosyası': 'Cepte Staj backup file',
-  'Cepte Staj — veri yedeği': 'Cepte Staj — data backup',
+  'Cepte Staj yedek dosyası': 'Intern Diary backup file',
+  'Cepte Staj — veri yedeği': 'Intern Diary — data backup',
 
   // ── Notifications ───────────────────────────────────────────────────
   'Bugünü doldurmayı hatırlatır': 'Reminds you to fill in today',

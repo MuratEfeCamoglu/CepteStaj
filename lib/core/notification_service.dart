@@ -81,7 +81,7 @@ class NotificationService {
         id: _dailyReminderId,
         scheduledDate: scheduled,
         notificationDetails: details,
-        title: 'Cepte Staj',
+        title: t('Cepte Staj'),
         body: t('Bugünü doldurmayı unutma ✍️'),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.time,

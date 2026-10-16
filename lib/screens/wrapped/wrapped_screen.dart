@@ -10,6 +10,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/motion.dart';
+import '../lock/pin_lock_screen.dart';
 
 class _WrappedSlide {
   final String eyebrow;
@@ -101,6 +102,10 @@ class _WrappedScreenState extends State<WrappedScreen> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    if (state.personalLocked) {
+      // Wrapped is built from the personal layer, so it shares Günlüğüm's lock.
+      return Scaffold(appBar: AppBar(), body: const PersonalLockView());
+    }
     final slides = _slides(state);
 
     // Each card gets its own deep tone, story-style; the change cross-fades.
@@ -213,7 +218,7 @@ class _WrappedScreenState extends State<WrappedScreen> {
 
   void _share(AppState state, List<_WrappedSlide> slides) {
     final lines = [
-      'Cepte Staj Wrapped — ${tStored(state.internship?.name ?? '')}',
+      '${t('Cepte Staj')} Wrapped — ${tStored(state.internship?.name ?? '')}',
       for (final s in slides) '${s.stat} ${s.unit}',
     ];
     SharePlus.instance.share(ShareParams(text: lines.join('\n')));

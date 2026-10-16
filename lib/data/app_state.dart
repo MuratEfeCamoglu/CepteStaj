@@ -179,6 +179,21 @@ class AppState extends ChangeNotifier {
   double get progress => totalWorkdays == 0 ? 0 : (filledWorkdays / totalWorkdays).clamp(0, 1);
   int get remainingDays => (totalWorkdays - filledWorkdays).clamp(0, totalWorkdays);
 
+  /// Workdays still ahead in the internship, today included — the time left,
+  /// regardless of how many days have been filled (see [emptyDaysBehind]).
+  int get remainingWorkdays {
+    final i = internship;
+    if (i == null) return 0;
+    final yesterday = DateTime(today.year, today.month, today.day - 1);
+    final passed = WorkdayCalculator.elapsedWorkdays(
+      start: i.startDate,
+      asOf: yesterday,
+      workDaysMask: i.workDaysMask,
+      excludeHolidays: i.excludeHolidays,
+    );
+    return (totalWorkdays - passed).clamp(0, totalWorkdays);
+  }
+
   int get elapsedWorkdaysSoFar {
     final i = internship;
     if (i == null) return 0;
@@ -308,6 +323,7 @@ class AppState extends ChangeNotifier {
   /// Average mood (1..5) over the last [days] calendar days, or null when
   /// no mood was logged in that window.
   double? averageMood({int days = 7}) {
+    if (personalLocked) return null;
     final moods = [
       for (var offset = 0; offset < days; offset++)
         _entries[dateKey(DateTime(today.year, today.month, today.day - offset))]?.mood ?? 0,
@@ -628,6 +644,10 @@ class AppState extends ChangeNotifier {
   // ── PIN lock (Günlüğüm tab) ────────────────────────────────────────
   bool get hasPinLock => _pinHash != null;
 
+  /// True while a PIN is set and Günlüğüm hasn't been unlocked — personal
+  /// data (mood etc.) must then stay hidden on every screen, not just the tab.
+  bool get personalLocked => hasPinLock && !personalUnlockedThisSession;
+
   void setPin(String pin) {
     _pinHash = PinUtil.hash(pin);
     personalUnlockedThisSession = true;
@@ -653,6 +673,20 @@ class AppState extends ChangeNotifier {
   void lockPersonalNow() {
     personalUnlockedThisSession = false;
     notifyListeners();
+  }
+
+  /// How long the app may sit in the background before Günlüğüm locks
+  /// again. Short trips out (photo picker, share sheet) don't relock.
+  static const relockAfter = Duration(seconds: 30);
+  DateTime? _backgroundedAt;
+
+  void onAppBackgrounded(DateTime now) => _backgroundedAt = now;
+
+  void onAppForegrounded(DateTime now) {
+    final since = _backgroundedAt;
+    _backgroundedAt = null;
+    if (!hasPinLock || !personalUnlockedThisSession || since == null) return;
+    if (now.difference(since) >= relockAfter) lockPersonalNow();
   }
 
   // ── Reset / backup ──────────────────────────────────────────────────

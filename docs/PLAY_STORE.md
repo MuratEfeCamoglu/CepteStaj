@@ -38,55 +38,12 @@ Her yeni sürümde `pubspec.yaml`'daki `version: 1.0.0+1` satırının **`+` son
 
 ## 3. Mağaza girişi (Store listing)
 
-**Uygulama adı** (en fazla 30 karakter):
-> Cepte Staj — Staj Defteri
+Metinlerin hepsi kopyalanmaya hazır olarak ayrı dosyalarda:
 
-**Kısa açıklama** (en fazla 80 karakter):
-> Staj defterini gün içinde not al, akşam kağıda kolayca geçir. Tamamen çevrimdışı.
+- **Türkçe (varsayılan):** [`docs/play-store/listing-tr.md`](play-store/listing-tr.md): ad, kısa ve tam açıklama
+- **İngilizce (en-US çevirisi):** [`docs/play-store/listing-en.md`](play-store/listing-en.md): uygulama İngilizce telefonlarda **Intern Diary** adıyla görünür, mağaza adı da onunla aynı
 
-**Tam açıklama** (en fazla 4000 karakter):
-
-```
-Staj defterini elle yazmak zorunda mısın? Cepte Staj gün içinde hızlıca not almanı, akşam da bu notları kağıda rahatça geçirmeni sağlar — ve stajını sadece bir ödev değil, hatırlanır bir deneyim haline getirir.
-
-📒 RESMİ DEFTER
-• Her iş günü için konu, yapılan işler ve öğrendiklerin
-• Kelime sayacı ve hedef: "84 / 120 kelime · ~11 satır"
-• Otomatik kaydetme — telefonu aceleyle kapatsan bile hiçbir şey kaybolmaz
-• Giriş-çıkış saatleri
-• Günü WhatsApp'tan tek dokunuşla gönder
-• Defterini PDF ya da Word (.docx) olarak indir veya paylaş
-
-✍️ KAĞIDA GEÇİRME MODU
-Büyük punto, defter satır aralığı, paragraf paragraf "yazdım ✓" işareti ve kalan satır sayısı. Yazarken ekran kapanmaz. Notlarını deftere geçirmenin en rahat yolu.
-
-📅 TAKVİM VE SAYAÇ
-• Staj süreni, başlangıç tarihini ve çalışma günlerini gir; bitiş tarihi otomatik hesaplanır
-• Resmi tatiller otomatik hariç tutulur
-• "5 iş günü kaldı" sayacı ve ilerleme halkası
-• Renkli takvim: dolu, eksik, tatil ve kağıda yazılan günler bir bakışta
-• Boş kalan günler için nazik uyarı
-
-🌈 STAJ GÜNLÜĞÜM (sadece senin için)
-• Ruh hali, sebep etiketleri ve günün yoğunluğu — 3 dokunuşta
-• Günün Olayı: en komik, en absürt ya da en trajik an
-• Günün küçük zaferi
-• Mentor sözlüğü, çay/kahve sayaçları, Staj Bingo ve rozetler
-• Zaman Kapsülü: staj başında beklentin ve korkun, sonunda "gerçekte ne oldu?"
-• Staj Wrapped: staj bitince paylaşılabilir özet
-
-🔒 GİZLİLİK ÖNCE GELİR
-• Hesap yok, sunucu yok, reklam yok — uygulama internete bile bağlanmaz
-• Tüm verilerin yalnızca telefonunda
-• Günlüğüm verileri Resmi Defter PDF'ine asla girmez
-• Günlüğüm sekmesini PIN ile kilitleyebilirsin
-• Fotoğraflar dahil yedekle / yeni telefona geri yükle
-
-Lise ve üniversite stajyerleri, zorunlu staj yapan herkes için.
-```
-
-**Kategori:** Eğitim (Education) — alternatif: Verimlilik (Productivity)
-**Etiketler:** staj, staj defteri, günlük, not, öğrenci
+**Kategori:** Eğitim (Education). Alternatif: Verimlilik (Productivity)
 
 **İletişim e-postası:** camoglumuratefe@gmail.com
 **Gizlilik politikası URL'si:**
@@ -95,13 +52,13 @@ Lise ve üniversite stajyerleri, zorunlu staj yapan herkes için.
 
 ### Görseller (`docs/play-store/` içinde hazır)
 
-| Play alanı | Dosya | Ölçü |
-|---|---|---|
-| Uygulama simgesi | `icon-512.png` | 512×512 |
-| Öne çıkan grafik | `feature-graphic-1024x500.png` | 1024×500 |
-| Telefon ekran görüntüleri (2–8 adet) | `screenshots/01-…08-….png` | 1080×2160 |
+| Play alanı | Türkçe | İngilizce | Ölçü |
+|---|---|---|---|
+| Uygulama simgesi | `icon-512.png` | aynı | 512×512 |
+| Öne çıkan grafik | `feature-graphic-1024x500.png` | `feature-graphic-en-1024x500.png` | 1024×500 |
+| Telefon ekran görüntüleri | `screenshots/tr/01…08` | `screenshots/en/01…07` | 1080×1920 |
 
-> Mevcut ekran görüntüleri eski yazı tipiyle (Roboto) alınmış. Uygulama artık Inter / Plus Jakarta Sans kullanıyor; yayından önce gerçek cihazda/emülatörde yenilerini çekip aynı klasöre koyman önerilir. Play kuralı: uzun kenar kısa kenarın en fazla 2 katı olmalı.
+Ekran görüntüleri gerçek telefondan, örnek (demo) bir stajla çekildi ve başlıklı mağaza görsellerine dönüştürüldü. Uzun kenar kısa kenarın 2 katını geçmiyor, yani Play kuralına uyuyor.
 
 ## 4. Play Console formları — hazır cevaplar
 
@@ -128,14 +85,14 @@ Yukarıdaki URL.
 
 ### Veri güvenliği (Data safety)
 - Uygulamanız gerekli kullanıcı veri türlerinden herhangi birini toplıyor veya paylaşıyor mu? → **Hayır**
-  - Gerekçe: Uygulamanın internet izni yok; tüm veriler cihazda kalıyor. Kullanıcının kendi başlattığı paylaşım (PDF/yedek dosyasını paylaş menüsüyle göndermek) Google'ın tanımına göre "toplama" sayılmaz.
+  - Gerekçe: Tüm veriler cihazda kalıyor. Tek ağ isteği, kullanıcının Spotify'dan paylaştığı şarkı bağlantısının adını Spotify'a sormak (yalnızca o bağlantı gider, kullanıcı verisi gitmez). Kullanıcının kendi başlattığı paylaşım (PDF/yedek dosyasını paylaş menüsüyle göndermek) Google'ın tanımına göre "toplama" sayılmaz.
 - Sonuç kartında **"Veri toplanmıyor" / "Üçüncü taraflarla veri paylaşılmıyor"** görünür.
 
 ### Hükümet uygulaması / Finansal özellikler / Sağlık
 Hepsi **Hayır**.
 
 ### İzin beyanları
-Manifest yalnızca `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED` ve `VIBRATE` istiyor (Kağıda Geçirme Modu'nda ekranı açık tutmak izin gerektirmez); hiçbiri için özel beyan formu gerekmez. (Kesin alarm, konum, SMS, tüm dosyalara erişim vb. hassas izin **yok**.)
+Uygulama `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, `VIBRATE` (bildirim eklentisinden) ve `INTERNET` (yalnızca Spotify'dan paylaşılan şarkının adını öğrenmek için) istiyor; hiçbiri için özel beyan formu gerekmez. (Kesin alarm, konum, SMS, tüm dosyalara erişim vb. hassas izin **yok**.)
 
 ## 5. Yayın akışı
 
@@ -156,7 +113,8 @@ Manifest yalnızca `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED` ve `VIBRATE` i
   - [ ] Resmi Defter PDF oluşuyor, Türkçe karakterler (ğ ş ı İ) doğru
   - [ ] Gün detayı → Paylaş: WhatsApp açılıyor; PDF ve Word "indir" ile İndirilenler'e kaydediliyor, Word dosyası telefonda/bilgisayarda açılıyor
   - [ ] Yedekle → (uygulamayı silip kur) → Geri yükle: kayıtlar **ve fotoğraflar** geri geliyor
-  - [ ] Kağıda Geçirme Modu açıkken ekran kararmıyor
+  - [ ] Günlüğüm PIN kilidi: uygulamadan 30 saniyeden uzun çıkınca tekrar PIN soruyor
+  - [ ] Telefon dili İngilizceyken simgenin altında "Intern Diary" yazıyor
   - [ ] Açık ve koyu temada durum çubuğu simgeleri okunuyor
 - [ ] Gizlilik politikası URL'si tarayıcıda giriş yapmadan açılıyor
-- [ ] Yeni ekran görüntüleri çekildi (isteğe bağlı ama önerilir)
+- [x] Yeni ekran görüntüleri çekildi (`docs/play-store/screenshots/tr` ve `en`)

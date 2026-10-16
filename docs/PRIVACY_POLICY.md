@@ -1,13 +1,13 @@
 # Cepte Staj — Gizlilik Politikası
 
-**Son güncelleme:** 13 Ekim 2026
+**Son güncelleme:** 16 Ekim 2026
 
 Cepte Staj, staj defterini telefonunda tutman için yapılmış, tamamen cihaz üzerinde çalışan bir uygulamadır. Bu politika hangi verileri nasıl işlediğini açıklar.
 
 ## Kısaca
 
 - **Hiçbir veri toplamıyoruz.** Uygulamanın sunucusu yoktur; hesap, reklam, analiz (analytics) veya çökme raporlama aracı içermez.
-- **Uygulama internete bağlanmaz.** İnternet izni istemez.
+- **Yazdıkların internete gönderilmez.** Uygulamanın internet izni tek bir iş için vardır: Spotify'dan bir şarkıyı "Paylaş → Cepte Staj" ile gönderdiğinde, şarkının adını öğrenmek için o bağlantı Spotify'a (open.spotify.com) sorulur. Bu istekte yalnızca paylaştığın Spotify bağlantısı bulunur; defterin, günlüğün ya da başka bir verin gönderilmez. Bu özelliği kullanmazsan uygulama hiç internete bağlanmaz.
 - Yazdığın her şey (defter kayıtları, günlük, ruh hali, fotoğraflar, ayarlar) **yalnızca senin telefonunda** saklanır.
 
 ## Cihazında saklanan veriler

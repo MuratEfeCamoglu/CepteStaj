@@ -258,7 +258,7 @@ class _Header extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                [tStored(state.internship?.name ?? 'Cepte Staj'), if (company.isNotEmpty) company].join(' · '),
+                [tStored(state.internship?.name ?? t('Cepte Staj')), if (company.isNotEmpty) company].join(' · '),
                 style: AppTextStyles.body(fontSize: 14, color: AppColors.textMuted, weight: FontWeight.w500),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -388,7 +388,7 @@ class _HeroCard extends StatelessWidget {
             children: [
               ProgressRing(
                 progress: state.progress,
-                remainingDays: state.remainingDays,
+                remainingDays: finished ? state.remainingDays : state.remainingWorkdays,
                 size: 132,
                 caption: finished ? t('gün boş kaldı') : t('iş günü kaldı'),
               ),
@@ -599,7 +599,7 @@ class _JournalNudge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mood = entry?.mood ?? 0;
+    final mood = state.personalLocked ? 0 : entry?.mood ?? 0;
     final label = mood > 0
         ? t('Bugünkü ruh halin {emoji}', {'emoji': moodEmojis[mood - 1]})
         : t('Günlüğüne 15 saniyelik not bırak');
@@ -1009,7 +1009,7 @@ class _RecentEntryTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (entry.mood > 0)
+            if (entry.mood > 0 && !state.personalLocked)
               Padding(
                 padding: const EdgeInsets.only(left: 6),
                 child: Text(moodEmojis[entry.mood - 1], style: const TextStyle(fontSize: 18)),

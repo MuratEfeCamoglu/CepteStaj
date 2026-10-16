@@ -93,6 +93,9 @@ class _CepteStajAppState extends State<CepteStajApp>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       _state.saveNow();
+      _state.onAppBackgrounded(DateTime.now());
+    } else if (state == AppLifecycleState.resumed) {
+      _state.onAppForegrounded(DateTime.now());
     }
   }
 
@@ -104,7 +107,7 @@ class _CepteStajAppState extends State<CepteStajApp>
         builder: (context, state, _) {
           _rebuildAllIfAppearanceChanged(state);
           return MaterialApp(
-            title: 'Cepte Staj',
+            title: t('Cepte Staj'),
             debugShowCheckedModeBanner: false,
             locale: L10n.locale,
             supportedLocales: const [Locale('tr', 'TR'), Locale('en', 'US')],
